@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>360° Menu Viewer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; }
+
+  /* ── MANAGER PAGE ── */
+  #managerPage { padding: 1rem; max-width: 900px; margin: 0 auto; }
+  .page-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e5e0; }
+  .page-header h1 { font-size: 22px; font-weight: 600; color: #111; margin-bottom: 2px; }
+  .page-header p { font-size: 13px; color: #888; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; }
+  .tab-btn {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd;
+    background: white; cursor: pointer; font-size: 13px; font-weight: 500;
+    color: #666; transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+  }
+  .tab-btn.active { background: #1D9E75; color: white; border-color: #0F6E56; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card { background: white; border: 1px solid #e5e5e0; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 12px; }
+  .form-group { margin-bottom: 12px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .form-row .form-group { flex: 1; min-width: 140px; }
+  input[type="text"], input[type="url"], select, textarea {
+    width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; background: white; color: #111; outline: none;
+    transition: border-color 0.15s; font-family: inherit;
+  }
+  input:focus, textarea:focus { border-color: #1D9E75; }
+  input[type="file"] { padding: 6px; font-size: 13px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px;
+    border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1px solid #ddd; background: white; color: #333; transition: all 0.15s;
+  }
+  .btn:hover { background: #f5f5f0; }
+  .btn.primary { background: #1D9E75; border-color: #0F6E56; color: white; }
+  .btn.primary:hover { background: #0F6E56; }
+  .btn.danger { color: #d85a30; border-color: #d85a30; }
+  .btn.danger:hover { background: #fff5f0; }
+  .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .item-card { background: white; border: 1px solid #e5e5e0; border-radius: 12px; overflow: hidden; }
+  .item-thumb {
+    width: 100%; height: 140px; background: #f0f0ea;
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid #e5e5e0; position: relative; overflow: hidden;
+  }
+  .item-thumb video { width: 100%; height: 100%; object-fit: cover; }
+  .item-thumb .no-vid { text-align: center; color: #bbb; font-size: 12px; }
+  .item-thumb .no-vid svg { display: block; margin: 0 auto 6px; }
+  .item-body { padding: 10px 12px; }
+  .item-name { font-size: 14px; font-weight: 600; color: #111; margin-bottom: 2px; }
+  .item-price { font-size: 13px; color: #888; margin-bottom: 10px; }
+  .item-actions { display: flex; gap: 6px; }
+  .empty-state { text-align: center; padding: 3rem 1rem; color: #bbb; }
+  .empty-state svg { margin: 0 auto 12px; }
+
+  /* QR Modal */
+  .qr-modal {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+  }
+  .qr-modal.open { display: flex; }
+  .qr-box {
+    background: white; border-radius: 16px; padding: 1.5rem;
+    max-width: 320px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .qr-box h3 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .qr-box .qr-sub { font-size: 13px; color: #888; margin-bottom: 14px; }
+  #qrCanvas { border-radius: 8px; margin-bottom: 14px; border: 1px solid #f0f0ea; }
+  .qr-url { font-size: 10px; color: #aaa; word-break: break-all; margin-bottom: 14px; background: #f5f5f0; padding: 8px; border-radius: 6px; }
+  .qr-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  /* How-to steps */
+  .step-list { display: flex; flex-direction: column; gap: 12px; }
+  .step { display: flex; gap: 12px; align-items: flex-start; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%; background: #1D9E75;
+    color: white; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .step-text p { font-size: 13px; color: #777; line-height: 1.5; }
+
+  /* ── VIEWER PAGE ── */
+  #viewerPage {
+    display: none; min-height: 100vh;
+    background: #0a0a0a; color: white;
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .viewer-card {
+    width: 100%; max-width: 400px;
+    background: #141414; border-radius: 24px;
+    padding: 1rem; border: 1px solid #222;
+  }
+  .viewer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 0 4px; }
+  .viewer-label { font-size: 10px; color: #EF9F27; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .viewer-title { font-size: 20px; font-weight: 700; color: white; }
+  .interactive-badge {
+    background: rgba(29,158,117,0.1); color: #1D9E75;
+    font-size: 11px; padding: 4px 10px; border-radius: 20px;
+    border: 1px solid rgba(29,158,117,0.25); font-weight: 500;
+  }
+  .video-container {
+    width: 100%; border-radius: 16px; overflow: hidden;
+    background: #000; aspect-ratio: 4/3; position: relative;
+    border: 1px solid #222; touch-action: none; user-select: none;
+  }
+  #viewerVideo { width: 100%; height: 100%; object-fit: cover; pointer-events: none; display: block; }
+  .video-overlay {
+    position: absolute; inset: 0; cursor: ew-resize;
+    display: flex; flex-direction: column; justify-content: space-between; padding: 12px;
+  }
+  .corners { display: flex; justify-content: space-between; }
+  .corner { width: 18px; height: 18px; border-color: rgba(239,159,39,0.7); border-style: solid; border-width: 0; }
+  .corner.tl { border-top-width: 2px; border-left-width: 2px; }
+  .corner.tr { border-top-width: 2px; border-right-width: 2px; }
+  .corner.bl { border-bottom-width: 2px; border-left-width: 2px; }
+  .corner.br { border-bottom-width: 2px; border-right-width: 2px; }
+  .swipe-hint {
+    align-self: center;
+    background: rgba(0,0,0,0.7); font-size: 12px; color: #ccc;
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .viewer-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 0 4px; }
+  .viewer-price { font-size: 22px; font-weight: 700; color: #EF9F27; }
+  .viewer-desc { font-size: 12px; color: #777; margin-top: 2px; }
+  .add-btn {
+    background: #EF9F27; color: #0a0a0a; font-weight: 700;
+    font-size: 13px; padding: 10px 20px; border-radius: 10px;
+    border: none; cursor: pointer; transition: background 0.15s;
+  }
+  .add-btn:active { background: #BA7517; }
+  .no-video-msg {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; flex-direction: column; gap: 8px; color: #555; font-size: 13px;
+  }
+  .viewer-back {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: #555; margin-bottom: 1rem; cursor: pointer;
+    background: none; border: none; color: #777;
+  }
+  .viewer-back:hover { color: #aaa; }
+
+  @media (max-width: 480px) {
+    .viewer-title { font-size: 17px; }
+    .viewer-price { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     MANAGER PAGE
+════════════════════════════════════ -->
+<div id="managerPage">
+  <div class="page-header">
+    <h1>360° menu QR system</h1>
+    <p>Add your food items, generate QR codes, print and stick on your physical menu</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-items" onclick="switchTab('items')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Menu items
+    </button>
+    <button class="tab-btn" id="tab-add" onclick="switchTab('add')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Add item
+    </button>
+    <button class="tab-btn" id="tab-howto" onclick="switchTab('howto')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      How to use
+    </button>
+  </div>
+
+  <!-- ITEMS PANEL -->
+  <div id="panel-items" class="panel active">
+    <div id="itemGrid" class="item-grid"></div>
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <svg width="48" height="48" fill="none" stroke="#ccc" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      <p style="font-size:14px; margin-top:8px;">No items yet</p>
+      <p style="font-size:12px; color:#ccc; margin-top:4px;">Go to "Add item" tab to get started</p>
+    </div>
+  </div>
+
+  <!-- ADD PANEL -->
+  <div id="panel-add" class="panel">
+    <div class="card">
+      <p style="font-size:15px;font-weight:600;margin-bottom:16px;">New menu item</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Item name *</label>
+          <input type="text" id="inp-name" placeholder="e.g. Margherita Pizza" />
+        </div>
+        <div class="form-group" style="max-width:160px;">
+          <label>Price *</label>
+          <input type="text" id="inp-price" placeholder="e.g. ₹349" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description (optional)</label>
+        <input type="text" id="inp-desc" placeholder="e.g. With extra cheese" />
+      </div>
+      <div class="form-group">
+        <label>Video URL (public .mp4 link) — for real QR</label>
+        <input type="url" id="inp-videourl" placeholder="https://... (Google Drive, Cloudinary, etc.)" />
+        <p style="font-size:11px;color:#aaa;margin-top:4px;">For testing locally, use the file picker below. For real QR codes, paste a public video URL above.</p>
+      </div>
+      <div class="form-group">
+        <label>360° video file (for preview only)</label>
+        <input type="file" id="inp-video" accept="video/*" onchange="previewVideo(this)" />
+        <video id="videoPreview" controls style="display:none;width:100%;max-height:200px;border-radius:8px;margin-top:8px;"></video>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+        <button class="btn primary" onclick="addItem()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save item
+        </button>
+        <button class="btn" onclick="clearForm()">Clear</button>
+      </div>
+      <div id="saveMsg" style="display:none;margin-top:10px;font-size:13px;color:#1D9E75;font-weight:500;">
+        ✓ Item saved! Go to "Menu items" to generate the QR code.
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO USE PANEL -->
+  <div id="panel-howto" class="panel">
+    <div class="card" style="margin-bottom:12px;">
+      <p style="font-size:15px;font-weight:600;margin-bottom:16px;">How to use this system</p>
+      <div class="step-list">
+        <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Shoot your 360° video</h4><p>Place the dish on a cake turntable or walk around it in a circle. Record 8–12 seconds of smooth rotation on your phone.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Upload video to a free host</h4><p>Upload the .mp4 to Google Drive, Cloudinary (free tier), or GitHub. Set it to public and copy the direct link.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Add item here</h4><p>Fill in the name, price, and paste the public video URL. Save the item.</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text"><h4>Generate & download QR</h4><p>Click "Get QR" on the item card. Download the QR image and print it.</p></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text"><h4>Stick QR on physical menu</h4><p>Put the QR sticker next to the dish name on your menu card. Customer scans → sees 360° viewer on their phone.</p></div></div>
+        <div class="step"><div class="step-num">6</div><div class="step-text"><h4>Host this HTML file</h4><p>Upload <strong>this file</strong> to GitHub Pages or Vercel (both free). Use that hosted URL when generating QR codes — it's the viewer page customers open.</p></div></div>
+      </div>
+    </div>
+    <div class="card" style="background:#f5f5f0;">
+      <p style="font-size:13px;font-weight:600;margin-bottom:6px;">Free hosting options</p>
+      <p style="font-size:13px;color:#666;line-height:1.6;">
+        <strong>GitHub Pages</strong> — upload this file to a repo, enable Pages → free URL<br>
+        <strong>Vercel / Netlify</strong> — drag-and-drop this file → instant free URL<br>
+        <strong>Cloudinary</strong> — free video CDN (500 items free tier)<br>
+        Total cost: <strong>₹0</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     QR MODAL
+════════════════════════════════════ -->
+<div class="qr-modal" id="qrModal">
+  <div class="qr-box">
+    <h3 id="qrItemName">Pizza</h3>
+    <p class="qr-sub" id="qrItemSub">Scan to view in 360°</p>
+    <canvas id="qrCanvas" width="220" height="220"></canvas>
+    <p class="qr-url" id="qrUrl"></p>
+    <div class="qr-actions">
+      <button class="btn primary" onclick="downloadQR()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download QR
+      </button>
+      <button class="btn" onclick="copyQRUrl()">Copy link</button>
+      <button class="btn" onclick="closeQR()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     VIEWER PAGE  (opened when QR is scanned)
+════════════════════════════════════ -->
+<div id="viewerPage" style="display:none;">
+  <div style="width:100%;max-width:400px;">
+    <button class="viewer-back" onclick="backToManager()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to manager
+    </button>
+    <div class="viewer-card">
+      <div class="viewer-header">
+        <div>
+          <div class="viewer-label">Live preview</div>
+          <div class="viewer-title" id="vItemName">Loading...</div>
+        </div>
+        <div class="interactive-badge">Interactive</div>
+      </div>
+      <div class="video-container" id="videoCont">
+        <video id="viewerVideo" src="" playsinline preload="auto" muted></video>
+        <div class="video-overlay" id="vidOverlay">
+          <div class="corners">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+          </div>
+          <div id="swipeHint" class="swipe-hint">Swipe left / right to rotate 🔄</div>
+          <div class="corners">
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+          </div>
+        </div>
+        <div class="no-video-msg" id="noVideoMsg" style="display:none;">
+          <svg width="32" height="32" fill="none" stroke="#555" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
+          <span>No 360° video available</span>
+        </div>
+      </div>
+      <div class="viewer-footer">
+        <div>
+          <div class="viewer-price" id="vItemPrice">₹0</div>
+          <div class="viewer-desc" id="vItemDesc"></div>
+        </div>
+        <button class="add-btn">Add to order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════ DATA ════════
+let items = [];
+try { items = JSON.parse(localStorage.getItem('menu360items') || '[]'); } catch(e) { items = []; }
+let videoBlobs = {};
+let currentQRItem = null;
+let currentQRUrl = '';
+
+// ════════ ROUTING ════════
+function getQueryParams() {
+  const p = new URLSearchParams(window.location.search);
+  return { view: p.get('view'), id: p.get('id'), name: p.get('name'), price: p.get('price'), desc: p.get('desc'), v: p.get('v') };
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const params = getQueryParams();
+  if (params.view === '1') {
+    showViewer(params);
+  } else {
+    document.getElementById('managerPage').style.display = 'block';
+    renderItems();
+  }
+});
+
+// ════════ VIEWER ════════
+function showViewer(p) {
+  document.getElementById('managerPage').style.display = 'none';
+  document.getElementById('viewerPage').style.display = 'flex';
+  document.getElementById('vItemName').textContent = p.name || 'Food item';
+  document.getElementById('vItemPrice').textContent = p.price || '';
+  document.getElementById('vItemDesc').textContent = p.desc || '';
+  const video = document.getElementById('viewerVideo');
+  const noVid = document.getElementById('noVideoMsg');
+  if (p.v && p.v.startsWith('http')) {
+    video.src = p.v;
+    video.style.display = 'block';
+    noVid.style.display = 'none';
+    initDrag(video);
+  } else {
+    video.style.display = 'none';
+    noVid.style.display = 'flex';
+  }
+}
+
+function backToManager() {
+  document.getElementById('viewerPage').style.display = 'none';
+  document.getElementById('managerPage').style.display = 'block';
+  window.history.replaceState({}, '', window.location.pathname);
+}
+
+function initDrag(video) {
+  const overlay = document.getElementById('vidOverlay');
+  const hint = document.getElementById('swipeHint');
+  let dragging = false, startX = 0, startTime = 0, duration = 0;
+  video.addEventListener('loadedmetadata', () => {
+    duration = video.duration;
+    video.currentTime = duration / 2;
+  });
+  function onStart(e) {
+    dragging = true;
+    hint.style.display = 'none';
+    startX = e.touches ? e.touches[0].clientX : e.clientX;
+    startTime = video.currentTime;
+  }
+  function onMove(e) {
+    if (!dragging || !duration) return;
+    e.preventDefault();
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const delta = x - startX;
+    let t = startTime - (delta / 320) * duration;
+    t = ((t % duration) + duration) % duration;
+    video.currentTime = t;
+  }
+  function onEnd() { dragging = false; }
+  overlay.addEventListener('mousedown', onStart);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onEnd);
+  overlay.addEventListener('touchstart', onStart, { passive: true });
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('touchend', onEnd);
+}
+
+// ════════ MANAGER ════════
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'items') renderItems();
+}
+
+function previewVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const vid = document.getElementById('videoPreview');
+  vid.src = url;
+  vid.style.display = 'block';
+  videoBlobs['_pending'] = { file, url };
+}
+
+function addItem() {
+  const name = document.getElementById('inp-name').value.trim();
+  const price = document.getElementById('inp-price').value.trim();
+  const desc = document.getElementById('inp-desc').value.trim();
+  const videoUrl = document.getElementById('inp-videourl').value.trim();
+  if (!name || !price) { alert('Please enter item name and price.'); return; }
+  const id = 'item_' + Date.now();
+  const item = { id, name, price, desc, videoUrl };
+  if (videoBlobs['_pending']) {
+    videoBlobs[id] = videoBlobs['_pending'];
+    delete videoBlobs['_pending'];
+  }
+  items.push(item);
+  try { localStorage.setItem('menu360items', JSON.stringify(items)); } catch(e) {}
+  const msg = document.getElementById('saveMsg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+}
+
+function clearForm() {
+  ['inp-name','inp-price','inp-desc','inp-videourl'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('inp-video').value = '';
+  document.getElementById('videoPreview').style.display = 'none';
+  delete videoBlobs['_pending'];
+}
+
+function deleteItem(id) {
+  if (!confirm('Remove this item?')) return;
+  items = items.filter(i => i.id !== id);
+  delete videoBlobs[id];
+  try { localStorage.setItem('menu360items', JSON.stringify(items)); } catch(e) {}
+  renderItems();
+}
+
+function renderItems() {
+  const grid = document.getElementById('itemGrid');
+  const empty = document.getElementById('emptyState');
+  if (items.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = items.map(item => `
+    <div class="item-card">
+      <div class="item-thumb">
+        ${videoBlobs[item.id]
+          ? `<video src="${videoBlobs[item.id].url}" muted loop autoplay playsinline></video>`
+          : item.videoUrl
+          ? `<div style="text-align:center;color:#888;font-size:12px;padding:10px;">
+               <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 6px"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+               Video URL set
+             </div>`
+          : `<div class="no-vid">
+               <svg width="24" height="24" fill="none" stroke="#ccc" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
+               No video
+             </div>`
+        }
+      </div>
+      <div class="item-body">
+        <div class="item-name">${item.name}</div>
+        <div class="item-price">${item.price}${item.desc ? ' · ' + item.desc : ''}</div>
+        <div class="item-actions">
+          <button class="btn" style="font-size:12px;padding:6px 10px;" onclick="showQR('${item.id}')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7"/><line x1="14" y1="14" x2="14" y2="14"/></svg>
+            Get QR
+          </button>
+          <button class="btn" style="font-size:12px;padding:6px 10px;" onclick="previewItem('${item.id}')">
+            Preview
+          </button>
+          <button class="btn danger" style="font-size:12px;padding:6px 10px;" onclick="deleteItem('${item.id}')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function previewItem(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const videoUrl = item.videoUrl || (videoBlobs[id] ? videoBlobs[id].url : '');
+  const params = { view: '1', name: item.name, price: item.price, desc: item.desc, v: videoUrl };
+  showViewer(params);
+}
+
+// ════════ QR ════════
+function buildViewerURL(item) {
+  const base = window.location.href.split('?')[0];
+  const videoUrl = item.videoUrl || (videoBlobs[item.id] ? videoBlobs[item.id].url : '');
+  const p = new URLSearchParams({ view: '1', name: item.name, price: item.price, desc: item.desc || '', v: videoUrl });
+  return base + '?' + p.toString();
+}
+
+function showQR(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  currentQRItem = item;
+  document.getElementById('qrItemName').textContent = item.name;
+  document.getElementById('qrItemSub').textContent = item.price + ' · Scan to view in 360°';
+  const url = buildViewerURL(item);
+  currentQRUrl = url;
+  document.getElementById('qrUrl').textContent = url.length > 80 ? url.substring(0, 80) + '...' : url;
+  const canvas = document.getElementById('qrCanvas');
+  QRCode.toCanvas(canvas, url, { width: 220, margin: 2, color: { dark: '#000', light: '#fff' } });
+  document.getElementById('qrModal').classList.add('open');
+}
+
+function closeQR() { document.getElementById('qrModal').classList.remove('open'); }
+
+function downloadQR() {
+  const canvas = document.getElementById('qrCanvas');
+  const a = document.createElement('a');
+  a.download = (currentQRItem ? currentQRItem.name.replace(/\s+/g, '_') : 'item') + '_QR.png';
+  a.href = canvas.toDataURL();
+  a.click();
+}
+
+function copyQRUrl() {
+  navigator.clipboard.writeText(currentQRUrl).then(() => {
+    alert('Link copied! Share this link or encode it as a QR separately.');
+  });
+}
+</script>
+</body>
+</html>
