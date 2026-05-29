@@ -64,20 +64,29 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
   background: #000; overflow: hidden;
 }
 
+/*
+  THE MAIN AR CANVAS — draws camera + composited dish together.
+  This is the ONLY visible output layer.
+*/
 #arMainCanvas {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   display: block;
 }
 
-/* Hidden sources — never shown */
-#arDishVideo, #camVideo {
+/* Hidden source video for dish (off-screen, never displayed directly) */
+#arDishVideo {
   display: none;
-  position: absolute; left: -9999px; top: -9999px;
-  width: 1px; height: 1px;
+  position: absolute; left: -9999px;
 }
 
-/* ── HUD overlays ── */
+/* Hidden camera video (off-screen, read by canvas) */
+#camVideo {
+  display: none;
+  position: absolute; left: -9999px;
+}
+
+/* ── HUD overlays (on top of canvas) ── */
 #arVignette {
   position: absolute; inset: 0; pointer-events: none;
   background:
@@ -94,6 +103,7 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
 #scanLine.visible { opacity: 0.7; }
 @keyframes scanMove { 0%{top:8%} 50%{top:88%} 100%{top:8%} }
 
+/* Corner brackets */
 .ar-bracket {
   position: absolute; pointer-events: none;
   width: 28px; height: 28px;
@@ -320,9 +330,9 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
 
   <!-- Hidden source videos — never displayed, only read by canvas -->
   <video id="camVideo"    autoplay playsinline muted></video>
-  <video id="arDishVideo" playsinline muted preload="auto" webkit-playsinline loop></video>
+  <video id="arDishVideo" playsinline muted preload="auto" webkit-playsinline></video>
 
-  <!-- Single composited output canvas -->
+  <!-- Single composited output canvas — shows camera + dish together -->
   <canvas id="arMainCanvas"></canvas>
 
   <!-- UI overlays on top of canvas -->
@@ -338,7 +348,7 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
     <div class="perm-icon">📷</div>
     <h2>See this dish in AR</h2>
     <p>Point your camera at your table — the dish will appear right on it!</p>
-    <button id="camPermBtn" onclick="startCamera()">Allow camera &amp; view AR</button>
+    <button id="camPermBtn" onclick="startCamera()">Allow camera & view AR</button>
     <button id="camSkipBtn" onclick="skipCamera()">Skip (no AR background)</button>
   </div>
 
@@ -369,14 +379,13 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
     <button class="bg-btn"        id="bgb-white" onclick="setBG('white')">⚪ White</button>
     <button class="bg-btn"        id="bgb-green" onclick="setBG('green')">🟢 Green</button>
     <button class="bg-btn"        id="bgb-none"  onclick="setBG('none')">◻ None</button>
-    <button class="bg-btn" id="bgb-auto" onclick="autoSample()" style="color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.12);border-radius:20px;">🎯 Auto</button>
   </div>
 
   <!-- Threshold slider -->
   <div id="threshRow">
-    <label>Cut:</label>
-    <input type="range" id="threshSlider" min="5" max="300" value="80" oninput="onThresh(this.value)">
-    <span id="threshVal">80</span>
+    <label>Edge:</label>
+    <input type="range" id="threshSlider" min="5" max="200" value="60" oninput="onThresh(this.value)">
+    <span id="threshVal">60</span>
   </div>
 
   <!-- Footer -->
@@ -402,15 +411,6 @@ let videoBlobs = {};
 let currentQRItem = null, currentQRUrl = '';
 
 // ════════════════════════════════════════
-//  HELPERS
-// ════════════════════════════════════════
-function $(id)          { return document.getElementById(id); }
-function show(id)       { $(id).style.display = 'block'; }
-function hide(id)       { $(id).style.display = 'none'; }
-function flexShow(id)   { $(id).style.display = 'flex'; }
-function showFlexEl(id) { $(id).style.display = 'flex'; }
-
-// ════════════════════════════════════════
 //  ROUTE
 // ════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
@@ -429,39 +429,30 @@ window.addEventListener('DOMContentLoaded', () => {
     show('managerPage');
     renderItems();
   }
-
-  // Attach drag/touch listeners to canvas once DOM is ready
-  const canvas = $('arMainCanvas');
-  canvas.addEventListener('touchstart',  onDragStart, { passive: false });
-  canvas.addEventListener('mousedown',   onDragStart, { passive: false });
-  window.addEventListener('touchmove',   onDragMove,  { passive: false });
-  window.addEventListener('mousemove',   onDragMove,  { passive: false });
-  window.addEventListener('touchend',    onDragEnd);
-  window.addEventListener('mouseup',     onDragEnd);
 });
 
 // ════════════════════════════════════════
 //  AR STATE
 // ════════════════════════════════════════
-let camStream    = null;
-let facingMode   = 'environment';
-let vidDuration  = 0;
-let isDragging   = false;
-let dragStartX   = 0;
-let dragStartFrac = 0;   // fractional position [0,1) in video at drag start
-let currentFrac  = 0;    // current fractional position driven by auto-spin or drag
-let rafId        = null;
-let autoActive   = false;
-let bgMode       = 'black';
-let bgThresh     = 80;
-let camReady     = false;
-let dishReady    = false;
+let camStream   = null;
+let facingMode  = 'environment';
+let vidDuration = 0;
+let isDragging  = false;
+let dragStartX  = 0;
+let dragStartT  = 0;
+let rafId       = null;
+let autoActive  = false;
+let bgMode      = 'black';   // black | white | green | none
+let bgThresh    = 60;
+let camReady    = false;
+let dishReady   = false;
 let currentParams = null;
-let lastFrameTime = 0;
 
-// Offscreen canvas for BG removal
-const offCanvas = document.createElement('canvas');
-const offCtx    = offCanvas.getContext('2d', { willReadFrequently: true });
+// Dish display position on canvas (fraction of canvas height, from bottom)
+// 0.35 = dish sits in bottom 35% — looks like it's ON the table
+const DISH_BOTTOM_FRAC = 0.38;
+// Dish size as fraction of canvas width
+const DISH_SIZE_FRAC   = 0.72;
 
 // ════════════════════════════════════════
 //  INIT VIEWER
@@ -472,10 +463,7 @@ function initViewer(p) {
   $('arPrice').textContent    = p.price || '';
   $('arDesc').textContent     = p.desc  || '';
   bgMode = p.bgtype || 'black';
-  bgThresh = 80;
-  $('threshSlider').value = 80;
-  $('threshVal').textContent = '80';
-  // Sync BG buttons
+  // Sync buttons
   document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('active'));
   const bb = $('bgb-' + bgMode); if (bb) bb.classList.add('active');
   show('camPermScreen');
@@ -489,14 +477,14 @@ async function startCamera() {
   flexShow('arLoader'); $('loaderMsg').textContent = 'Starting camera…';
   try {
     camStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+      video: { facingMode, width:{ideal:1280}, height:{ideal:720} }, audio: false
     });
     const cv = $('camVideo');
     cv.srcObject = camStream;
     await cv.play();
     camReady = true;
   } catch(e) {
-    console.warn('Camera error:', e);
+    console.warn('cam error', e);
     camReady = false;
   }
   loadDishVideo();
@@ -515,61 +503,49 @@ async function flipCam() {
   facingMode = facingMode === 'environment' ? 'user' : 'environment';
   try {
     camStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+      video: { facingMode, width:{ideal:1280}, height:{ideal:720} }, audio: false
     });
     const cv = $('camVideo');
     cv.srcObject = camStream;
     await cv.play();
-  } catch(e) { console.warn('Flip cam error:', e); }
+  } catch(e) {}
 }
 
 // ════════════════════════════════════════
 //  DISH VIDEO LOAD
 // ════════════════════════════════════════
 function loadDishVideo() {
-  const dv = $('arDishVideo');
-  const p  = currentParams;
-
+  const vid = $('arDishVideo');
+  const p   = currentParams;
   if (!p.v) { hide('arLoader'); showError('No video URL set for this item.'); return; }
 
   $('loaderMsg').textContent = 'Loading dish video…';
 
-  dv.removeAttribute('crossorigin');
-  dv.src = p.v;
-  dv.loop = true;
+  // Try loading without crossorigin first (avoids CORS block on display)
+  vid.setAttribute('crossorigin', 'anonymous');
+vid.src = p.v;
 
-  dv.onloadedmetadata = () => {
-    vidDuration = dv.duration || 10;
-    currentFrac = 0;
+  vid.onloadedmetadata = () => {
+    vidDuration = vid.duration || 10;
+    vid.currentTime = vidDuration * 0.5;
   };
 
-  dv.oncanplaythrough = () => {
-    if (dishReady) return; // prevent double-fire
+  vid.oncanplay = () => {
     dishReady = true;
     hide('arLoader');
     showARControls();
-    // Start the video playing — we use currentTime scrubbing for rotation
-    // but we need it "playing" so frames are decoded on mobile
-    dv.play().catch(() => {});
-    startRenderLoop();
+    // iOS seek unlock
+    vid.play().then(() => {
+      setTimeout(() => { vid.pause(); vid.currentTime = vidDuration * 0.5; startRenderLoop(); autoActive = false; }, 120);
+    }).catch(() => { vid.pause(); startRenderLoop(); autoActive = false; });
   };
 
-  // Fallback for browsers that don't fire canplaythrough quickly
-  dv.oncanplay = () => {
-    if (dishReady) return;
-    dishReady = true;
+  vid.onerror = () => {
     hide('arLoader');
-    showARControls();
-    dv.play().catch(() => {});
-    startRenderLoop();
+    showError('Could not load video.<br>Make sure the Cloudinary URL is public and ends in .mp4<br>Also ensure "Allowed origins" in Cloudinary includes your domain.');
   };
 
-  dv.onerror = () => {
-    hide('arLoader');
-    showError('Could not load video.<br>Make sure the Cloudinary URL is public and ends in .mp4');
-  };
-
-  dv.load();
+  vid.load();
 }
 
 // ════════════════════════════════════════
@@ -583,8 +559,8 @@ function showARControls() {
   showFlexEl('arClose');
   showFlexEl('arFlip');
   show('arHint');
-  autoActive = false; // no auto-spin — manual drag only
   $('scanLine').classList.add('visible');
+  // Size the main canvas to fill screen
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 }
@@ -596,62 +572,33 @@ function resizeCanvas() {
 }
 
 // ════════════════════════════════════════
-//  DRAG CONTROLS — scrub video by fraction
+//  MAIN RENDER LOOP — composite cam + dish
 // ════════════════════════════════════════
-function onDragStart(e) {
-  if (!dishReady || !vidDuration) return;
-  isDragging   = true;
-  autoActive   = false;
-  hide('arHint');
-  dragStartX    = e.touches ? e.touches[0].clientX : e.clientX;
-  dragStartFrac = currentFrac;
-  e.preventDefault();
-}
+let prevVidTime = -1;
 
-function onDragMove(e) {
-  if (!isDragging || !vidDuration) return;
-  e.preventDefault();
-  const x  = e.touches ? e.touches[0].clientX : e.clientX;
-  const dx = x - dragStartX;
-  // 280px = one full revolution
-  const delta = dx / 280;
-  currentFrac = ((dragStartFrac - delta) % 1 + 1) % 1;
-  const dv = $('arDishVideo');
-  dv.currentTime = currentFrac * vidDuration;
-}
-
-function onDragEnd() {
-  isDragging = false;
-}
-
-// ════════════════════════════════════════
-//  RENDER LOOP
-// ════════════════════════════════════════
 function startRenderLoop() {
   if (rafId) cancelAnimationFrame(rafId);
-  lastFrameTime = performance.now();
-
   const canvas = $('arMainCanvas');
   const ctx    = canvas.getContext('2d', { willReadFrequently: true });
   const camVid = $('camVideo');
   const dVid   = $('arDishVideo');
 
+  let lastT = performance.now();
+
   function frame(now) {
     rafId = requestAnimationFrame(frame);
-
     const W = canvas.width, H = canvas.height;
-    const dt = now - lastFrameTime;
-    lastFrameTime = now;
-
     ctx.clearRect(0, 0, W, H);
 
-    // ── 1. Draw camera background ──
+    // ── 1. Draw camera (or dark fallback) ──
     if (camReady && camVid.readyState >= 2) {
+      // Fill canvas with camera, maintaining aspect ratio (cover)
       const vw = camVid.videoWidth  || W;
       const vh = camVid.videoHeight || H;
       const scale = Math.max(W / vw, H / vh);
       const sw = vw * scale, sh = vh * scale;
       const sx = (W - sw) / 2, sy = (H - sh) / 2;
+      // Mirror for front cam
       if (facingMode === 'user') {
         ctx.save();
         ctx.translate(W, 0); ctx.scale(-1, 1);
@@ -661,7 +608,7 @@ function startRenderLoop() {
         ctx.drawImage(camVid, sx, sy, sw, sh);
       }
     } else {
-      // Dark gradient fallback (no camera)
+      // Dark gradient background (no cam)
       const grad = ctx.createRadialGradient(W/2, H*0.4, 0, W/2, H*0.4, H*0.7);
       grad.addColorStop(0, '#1c1400');
       grad.addColorStop(1, '#040404');
@@ -669,9 +616,14 @@ function startRenderLoop() {
       ctx.fillRect(0, 0, W, H);
     }
 
-    // Auto-spin disabled — manual drag only
+    // ── 2. Auto-spin ──
+    if (autoActive && !isDragging && dVid.paused && vidDuration > 0) {
+      const dt = now - lastT;
+      dVid.currentTime = ((dVid.currentTime + (dt / 13000) * vidDuration) % vidDuration);
+    }
+    lastT = now;
 
-    // ── 3. Draw dish ──
+    // ── 3. Draw dish with background removal ──
     if (dishReady && dVid.readyState >= 2) {
       drawDish(ctx, dVid, W, H);
     }
@@ -679,149 +631,279 @@ function startRenderLoop() {
   rafId = requestAnimationFrame(frame);
 }
 
-// ════════════════════════════════════════
-//  DRAW DISH — BG removal + composite
-// ════════════════════════════════════════
-function drawDish(ctx, dVid, W, H) {
-  // Dish dimensions — centered on screen
-  const dishW = Math.round(W * 0.82);
-  const dishH = Math.round(dishW * 0.82);
-  const dishX = Math.round((W - dishW) / 2);
-  const dishY = Math.round((H - dishH) / 2);  // true center
+// ============================
+// DRAG ROTATION CONTROLS
+// ============================
 
-  // ── No BG removal mode ──
+
+
+// ════════════════════════════════════════
+//  DRAW DISH — extract frame, remove BG, composite
+// ════════════════════════════════════════
+// Offscreen canvas for dish processing
+const offCanvas = document.createElement('canvas');
+const offCtx    = offCanvas.getContext('2d', { willReadFrequently: true });
+
+function drawDish(ctx, dVid, W, H) {
+
+  // =========================
+  // DISH SIZE + POSITION
+  // =========================
+
+  const dishW = Math.round(W * 0.52);
+  const dishH = dishW;
+
+  const dishX = Math.round((W - dishW) / 2);
+
+  // Lower position = more realistic
+  const dishY = Math.round(H - dishH - H * 0.12);
+
+
+
+  // =========================
+  // NO BG REMOVAL MODE
+  // =========================
+
   if (bgMode === 'none') {
-    drawShadow(ctx, dishX, dishY, dishW, dishH);
+
+    // Soft table shadow
+    ctx.save();
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+      dishX + dishW / 2,
+      dishY + dishH * 0.88,
+      dishW * 0.28,
+      dishH * 0.06,
+      0,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+    ctx.filter = 'blur(12px)';
+    ctx.fill();
+
+    ctx.restore();
+
     ctx.drawImage(dVid, dishX, dishY, dishW, dishH);
+
     return;
   }
 
-  // ── Offscreen canvas sizing ──
+
+
+  // =========================
+  // OFFSCREEN CANVAS
+  // =========================
+
   if (offCanvas.width !== dishW || offCanvas.height !== dishH) {
-    offCanvas.width  = dishW;
+    offCanvas.width = dishW;
     offCanvas.height = dishH;
   }
+
   offCtx.clearRect(0, 0, dishW, dishH);
+
   offCtx.drawImage(dVid, 0, 0, dishW, dishH);
 
-  // ── Read pixels ──
+
+
+  // =========================
+  // READ PIXELS
+  // =========================
+
   let imgData;
+
   try {
     imgData = offCtx.getImageData(0, 0, dishW, dishH);
-  } catch(e) {
+  } catch (e) {
+
+    // CORS fallback
     ctx.drawImage(dVid, dishX, dishY, dishW, dishH);
+
     return;
   }
 
   const d = imgData.data;
-  const W2 = dishW, H2 = dishH;
 
-  // ════════════════════════════════════════
-  // ROBUST BG REMOVAL
-  // ════════════════════════════════════════
-  // Step 1: Sample the actual BG color from the 4 corners of THIS frame
-  // This is far more accurate than assuming pure white/black
-  function sampleCorner(px, py, size) {
-    let tr=0,tg=0,tb=0,n=0;
-    for(let row=py; row<Math.min(py+size,H2); row++) {
-      for(let col=px; col<Math.min(px+size,W2); col++) {
-        const i2=(row*W2+col)*4;
-        tr+=d[i2]; tg+=d[i2+1]; tb+=d[i2+2]; n++;
-      }
-    }
-    return n>0 ? [tr/n, tg/n, tb/n] : [0,0,0];
-  }
-  const cs = 8; // corner sample size
-  const c1=sampleCorner(0,0,cs), c2=sampleCorner(W2-cs,0,cs);
-  const c3=sampleCorner(0,H2-cs,cs), c4=sampleCorner(W2-cs,H2-cs,cs);
-  const bgR = (c1[0]+c2[0]+c3[0]+c4[0])/4;
-  const bgG = (c1[1]+c2[1]+c3[1]+c4[1])/4;
-  const bgB = (c1[2]+c2[2]+c3[2]+c4[2])/4;
+  const t = bgThresh;
+  const soft = 35;
 
-  // Scale tolerance: bgThresh maps 5-300 → tolerance in color-distance units
-  const tol     = bgThresh * 1.4;
-  const feather = Math.max(15, tol * 0.5);
+
+
+  // =========================
+  // BACKGROUND REMOVAL
+  // =========================
 
   for (let i = 0; i < d.length; i += 4) {
-    const r = d[i], g = d[i+1], b = d[i+2];
 
-    // Euclidean distance from sampled BG color
-    const dr = r - bgR, dg = g - bgG, db = b - bgB;
-    let dist = Math.sqrt(dr*dr + dg*dg + db*db);
+    const r = d[i];
+    const g = d[i + 1];
+    const b = d[i + 2];
 
-    // Extra logic per mode
-    if (bgMode === 'white') {
-      // Boost: high-luma + low-saturation pixels = definitely background
-      const lum = r*0.299 + g*0.587 + b*0.114;
-      const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
-      const sat  = maxC > 0 ? (maxC-minC)/maxC : 0;
-      if (lum > 210 && sat < 0.18) dist = Math.min(dist, tol * 0.3); // force transparent
-      // Saturation boost for colourful foreground
-      dist += sat * 120;
+    let alpha = 255;
 
-    } else if (bgMode === 'black') {
-      const lum = r*0.299 + g*0.587 + b*0.114;
-      if (lum < 30) dist = Math.min(dist, tol * 0.3);
 
-    } else if (bgMode === 'green') {
-      const greenness = g - Math.max(r, b);
-      if (greenness > 20) dist = Math.min(dist, tol * 0.3);
-      // Despill
-      const ratio = Math.min(1, dist / (tol + feather));
-      d[i+1] = Math.min(255, Math.round(g*ratio + Math.min(r,b)*(1-ratio)));
-    }
 
-    // Smoothstep alpha
-    let alpha;
-    if (dist <= tol) {
-      alpha = 0;
-    } else if (dist < tol + feather) {
-      const t = (dist - tol) / feather;
-      alpha = Math.round(t*t*(3-2*t) * 255);
-    } else {
-      alpha = 255;
-    }
-    d[i+3] = Math.min(d[i+3], alpha);
-  }
+    // -------------------------
+    // BLACK BG
+    // -------------------------
 
-  // Edge erosion: kill a 4px border ring to remove stubborn fringe
-  const borderPx = 4;
-  for (let row = 0; row < H2; row++) {
-    for (let col = 0; col < W2; col++) {
-      if (row < borderPx || row >= H2-borderPx || col < borderPx || col >= W2-borderPx) {
-        d[(row*W2+col)*4+3] = 0;
+    if (bgMode === 'black') {
+
+      const lum = r * 0.299 + g * 0.587 + b * 0.114;
+
+      if (lum < t) {
+
+        alpha = 0;
+
+      } else if (lum < t + soft) {
+
+        alpha = Math.round(
+          ((lum - t) / soft) * 255
+        );
       }
     }
+
+
+
+    // -------------------------
+    // WHITE BG
+    // -------------------------
+
+    else if (bgMode === 'white') {
+
+      const lum = r * 0.299 + g * 0.587 + b * 0.114;
+
+      const inv = 255 - t;
+
+      if (lum > inv) {
+
+        alpha = 0;
+
+      } else if (lum > inv - soft) {
+
+        alpha = Math.round(
+          ((inv - lum) / soft) * 255
+        );
+      }
+    }
+
+
+
+    // -------------------------
+    // GREEN SCREEN
+    // -------------------------
+
+    else if (bgMode === 'green') {
+
+      const greenness = g - Math.max(r, b);
+
+      if (greenness > t) {
+
+        alpha = 0;
+
+      } else if (greenness > t - soft) {
+
+        alpha = Math.round(
+          ((t - greenness) / soft) * 255
+        );
+      }
+
+      // Despill green edges
+      if (alpha < 255) {
+
+        d[i + 1] = Math.round(
+          g * (alpha / 255) +
+          Math.min(r, b) * (1 - alpha / 255)
+        );
+      }
+    }
+
+
+
+    // Apply alpha
+    d[i + 3] = Math.min(d[i + 3], alpha);
   }
+
+
+
+  // =========================
+  // PUT PIXELS BACK
+  // =========================
 
   offCtx.putImageData(imgData, 0, 0);
 
-  // ── Draw shadow underneath dish ──
-  drawShadow(ctx, dishX, dishY, dishW, dishH);
 
-  // ── Composite dish onto camera frame ──
+
+
+  // =========================
+  // DRAW DISH WITH BLENDING
+  // =========================
+
   ctx.save();
-  ctx.globalAlpha = 1.0;
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.drawImage(offCanvas, dishX, dishY, dishW, dishH);
+
+  ctx.globalAlpha = 0.98;
+
+  // Makes AR look more natural
+  ctx.globalCompositeOperation = 'screen';
+
+  ctx.drawImage(
+    offCanvas,
+    dishX,
+    dishY,
+    dishW,
+    dishH
+  );
+
   ctx.restore();
 }
 
 function drawShadow(ctx, dishX, dishY, dishW, dishH) {
+
   const cx = dishX + dishW / 2;
+
+  // Slightly higher shadow placement
   const sy = dishY + dishH * 0.92;
-  const sw = dishW * 0.55;
+
+  // Wider softer shadow
+  const sw = dishW * 0.72;
+
+  // Taller blur
+  const sh = 30;
+
+  const grad = ctx.createRadialGradient(
+    cx,
+    sy,
+    0,
+    cx,
+    sy,
+    sw / 2
+  );
+
+  grad.addColorStop(0, 'rgba(0,0,0,0.38)');
+  grad.addColorStop(0.45, 'rgba(0,0,0,0.18)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
 
   ctx.save();
-  ctx.filter = 'blur(18px)';
-  const grad = ctx.createRadialGradient(cx, sy, 0, cx, sy, sw * 0.5);
-  grad.addColorStop(0,   'rgba(0,0,0,0.45)');
-  grad.addColorStop(0.5, 'rgba(0,0,0,0.20)');
-  grad.addColorStop(1,   'rgba(0,0,0,0)');
+
+  ctx.scale(1, sh / (sw / 2));
+
   ctx.fillStyle = grad;
+
   ctx.beginPath();
-  ctx.ellipse(cx, sy, sw * 0.5, dishH * 0.06, 0, 0, Math.PI * 2);
+
+  ctx.arc(
+    cx,
+    sy * (sw / 2) / sh,
+    sw / 2,
+    0,
+    Math.PI * 2
+  );
+
   ctx.fill();
+
   ctx.restore();
 }
 
@@ -840,58 +922,42 @@ function onThresh(val) {
   $('threshVal').textContent = val;
 }
 
-// Auto-sample: read corner pixels from the dish video to guess best threshold
-function autoSample() {
+// ════════════════════════════════════════
+//  DRAG TO SCRUB (rotate 360°)
+// ════════════════════════════════════════
+// Attach to the canvas (covers whole screen)
+window.addEventListener('DOMContentLoaded', () => {
+  const canvas = $('arMainCanvas');
+  canvas.addEventListener('touchstart',  onDragStart, { passive: false });
+  canvas.addEventListener('mousedown',   onDragStart, { passive: false });
+  window.addEventListener('touchmove',   onDragMove,  { passive: false });
+  window.addEventListener('mousemove',   onDragMove,  { passive: false });
+  window.addEventListener('touchend',    onDragEnd);
+  window.addEventListener('mouseup',     onDragEnd);
+});
+
+function onDragStart(e) {
+  if (!dishReady || !vidDuration) return;
+  isDragging = true; autoActive = false;
+  hide('arHint');
+  dragStartX = e.touches ? e.touches[0].clientX : e.clientX;
+  dragStartT = $('arDishVideo').currentTime;
+  e.preventDefault();
+}
+function onDragMove(e) {
+  if (!isDragging || !vidDuration) return;
+  e.preventDefault();
+  const x  = e.touches ? e.touches[0].clientX : e.clientX;
+  const dx = x - dragStartX;
   const dv = $('arDishVideo');
-  if (!dishReady || !dv) return;
-  const s = 80; // sample canvas size
-  const sc = document.createElement('canvas');
-  sc.width = s; sc.height = s;
-  const sx = sc.getContext('2d', { willReadFrequently: true });
-  sx.drawImage(dv, 0, 0, s, s);
-  let imgD;
-  try { imgD = sx.getImageData(0, 0, s, s); } catch(e) { return; }
-  const d = imgD.data;
-  // Sample the 4 corners (5x5 patch each)
-  const corners = [];
-  const patches = [[0,0],[s-5,0],[0,s-5],[s-5,s-5]];
-  patches.forEach(([px,py]) => {
-    let tr=0,tg=0,tb=0,n=0;
-    for(let row=py;row<Math.min(py+5,s);row++) {
-      for(let col=px;col<Math.min(px+5,s);col++) {
-        const i=(row*s+col)*4;
-        tr+=d[i]; tg+=d[i+1]; tb+=d[i+2]; n++;
-      }
-    }
-    corners.push([tr/n, tg/n, tb/n]);
-  });
-  // Average corner color
-  const avgR = corners.reduce((s,c)=>s+c[0],0)/4;
-  const avgG = corners.reduce((s,c)=>s+c[1],0)/4;
-  const avgB = corners.reduce((s,c)=>s+c[2],0)/4;
-  const lum = avgR*0.299 + avgG*0.587 + avgB*0.114;
-  const sat = (Math.max(avgR,avgG,avgB)-Math.min(avgR,avgG,avgB))/(Math.max(avgR,avgG,avgB)||1);
-  // Decide BG type from corner color
-  if (lum > 180 && sat < 0.2) {
-    setBG('white');
-    const newT = Math.round(Math.sqrt(Math.pow(255-avgR,2)+Math.pow(255-avgG,2)+Math.pow(255-avgB,2)) + 40);
-    bgThresh = Math.min(300, Math.max(30, newT));
-  } else if (lum < 60) {
-    setBG('black');
-    const newT = Math.round(Math.sqrt(avgR*avgR+avgG*avgG+avgB*avgB) + 30);
-    bgThresh = Math.min(300, Math.max(20, newT));
-  } else if (avgG - Math.max(avgR,avgB) > 20) {
-    setBG('green');
-    bgThresh = 80;
-  } else {
-    bgThresh = 80;
-  }
-  $('threshSlider').value = bgThresh;
-  $('threshVal').textContent = bgThresh;
-  // Flash the Auto button
-  const btn = $('bgb-auto');
-  btn.textContent = '✓ Done'; btn.style.color='#4ade80';
-  setTimeout(()=>{ btn.textContent='🎯 Auto'; btn.style.color='rgba(255,255,255,0.7)'; }, 1200);
+  let t = dragStartT - (dx / 260) * vidDuration;
+  t = ((t % vidDuration) + vidDuration) % vidDuration;
+  if (!dv.paused) dv.pause();
+  dv.currentTime = t;
+}
+function onDragEnd() {
+  isDragging = false;
+  setTimeout(() => { if (!isDragging) autoActive = true; }, 1800);
 }
 
 // ════════════════════════════════════════
@@ -904,15 +970,13 @@ function addToOrder() {
 }
 
 // ════════════════════════════════════════
-//  CLOSE VIEWER
+//  CLOSE
 // ════════════════════════════════════════
 function closeViewer() {
   if (camStream)  { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
   if (rafId)      { cancelAnimationFrame(rafId); rafId = null; }
   const dv = $('arDishVideo'); dv.pause(); dv.src = '';
-  camReady = false; dishReady = false; autoActive = false; isDragging = false;
-  vidDuration = 0; currentFrac = 0;
-  window.removeEventListener('resize', resizeCanvas);
+  camReady = false; dishReady = false; autoActive = false; isDragging = false; vidDuration = 0;
   hide('viewerPage'); show('managerPage');
   history.replaceState({}, '', location.pathname);
   renderItems();
@@ -937,19 +1001,17 @@ function switchTab(name) {
   $('tab-'   + name).classList.add('active');
   if (name === 'items') renderItems();
 }
-
 function previewVid(input) {
   const f = input.files[0]; if (!f) return;
   const url = URL.createObjectURL(f);
   const v = $('videoPreview'); v.src = url; v.style.display = 'block';
-  videoBlobs['_p'] = { file: f, url };
+  videoBlobs['_p'] = { file:f, url };
 }
-
 function addItem() {
-  const name   = $('inp-name').value.trim();
-  const price  = $('inp-price').value.trim();
-  const desc   = $('inp-desc').value.trim();
-  const vurl   = $('inp-videourl').value.trim();
+  const name  = $('inp-name').value.trim();
+  const price = $('inp-price').value.trim();
+  const desc  = $('inp-desc').value.trim();
+  const vurl  = $('inp-videourl').value.trim();
   const bgtype = document.querySelector('input[name="bgtype"]:checked')?.value || 'black';
   if (!name || !price) { alert('Name and price required.'); return; }
   const id   = 'i_' + Date.now();
@@ -960,14 +1022,12 @@ function addItem() {
   $('saveMsg').style.display = 'block';
   setTimeout(() => $('saveMsg').style.display = 'none', 3000);
 }
-
 function clearForm() {
   ['inp-name','inp-price','inp-desc','inp-videourl'].forEach(id => $(id).value = '');
   $('inp-video').value = '';
   $('videoPreview').style.display = 'none';
   delete videoBlobs['_p'];
 }
-
 function deleteItem(id) {
   if (!confirm('Remove this item?')) return;
   items = items.filter(i => i.id !== id);
@@ -975,7 +1035,6 @@ function deleteItem(id) {
   save();
   renderItems();
 }
-
 function renderItems() {
   const grid  = $('itemGrid');
   const empty = $('emptyState');
@@ -987,13 +1046,13 @@ function renderItems() {
         ${videoBlobs[item.id]
           ? `<video src="${videoBlobs[item.id].url}" muted loop autoplay playsinline></video>`
           : item.videoUrl
-          ? `<div style="text-align:center;color:#1D9E75;font-size:12px;padding:8px;"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 6px;display:block"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>${item.bgtype ? item.bgtype + ' bg' : 'Video ready'}</div>`
+          ? `<div style="text-align:center;color:#1D9E75;font-size:12px;"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 6px;display:block"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>${item.bgtype ? item.bgtype+' bg' : 'Video ready'}</div>`
           : `<div style="color:#ccc;font-size:12px;">No video</div>`
         }
       </div>
       <div class="item-body">
         <div class="item-name">${item.name}</div>
-        <div class="item-price">${item.price}${item.desc ? ' · ' + item.desc : ''}</div>
+        <div class="item-price">${item.price}${item.desc ? ' · '+item.desc : ''}</div>
         <div class="item-actions">
           <button class="btn" style="font-size:12px;padding:6px 10px" onclick="showQR('${item.id}')">Get QR</button>
           <button class="btn" style="font-size:12px;padding:6px 10px" onclick="previewItem('${item.id}')">AR Preview</button>
@@ -1002,7 +1061,6 @@ function renderItems() {
       </div>
     </div>`).join('');
 }
-
 function previewItem(id) {
   const item = items.find(i => i.id === id); if (!item) return;
   const vurl = item.videoUrl || (videoBlobs[id]?.url || '');
@@ -1011,12 +1069,10 @@ function previewItem(id) {
   if (camStream)  { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
   if (rafId)      { cancelAnimationFrame(rafId); rafId = null; }
   const dv = $('arDishVideo'); dv.pause(); dv.src = '';
-  camReady = false; dishReady = false; autoActive = false; isDragging = false;
-  vidDuration = 0; currentFrac = 0;
+  camReady = false; dishReady = false; autoActive = false; isDragging = false; vidDuration = 0;
 
-  // Reset all AR UI elements
-  ['arHUD','arFooter','bgBar','threshRow','arHint','arError','arLoader']
-    .forEach(i => $(i).style.display = 'none');
+  const hideList = ['arHUD','arFooter','bgBar','threshRow','arHint','arError','arLoader'];
+  hideList.forEach(i => $(i).style.display = 'none');
   $('arClose').style.display = 'none';
   $('arFlip').style.display  = 'none';
   $('scanLine').classList.remove('visible');
@@ -1026,7 +1082,6 @@ function previewItem(id) {
   show('viewerPage');
   initViewer({ name: item.name, price: item.price, desc: item.desc, v: vurl, bgtype: item.bgtype || 'black' });
 }
-
 function save() {
   try { localStorage.setItem('menu360', JSON.stringify(items)); } catch(e){}
 }
@@ -1035,42 +1090,37 @@ function save() {
 //  QR
 // ════════════════════════════════════════
 function buildURL(item) {
-  const base = location.href.split('?')[0];
-  return base + '?' + new URLSearchParams({
-    view: '1',
-    name:   item.name,
-    price:  item.price,
-    desc:   item.desc  || '',
-    v:      item.videoUrl || '',
-    bgtype: item.bgtype || 'black'
-  });
+  const base = 'https://krish-ai007.github.io/AR_MENU/menu360_system.html';
+  return base + '?' + new URLSearchParams({ view:'1', name: item.name, price: item.price, desc: item.desc||'', v: item.videoUrl||'', bgtype: item.bgtype||'black' });
 }
-
 function showQR(id) {
   const item = items.find(i => i.id === id); if (!item) return;
   currentQRItem = item;
   $('qrItemName').textContent = item.name;
   $('qrItemSub').textContent  = item.price + ' · Scan for AR 360° view';
   const url = buildURL(item); currentQRUrl = url;
-  $('qrUrl').textContent = url.length > 80 ? url.slice(0, 80) + '…' : url;
-  QRCode.toCanvas($('qrCanvas'), url, { width: 220, margin: 2, color: { dark: '#000', light: '#fff' } });
+  $('qrUrl').textContent = url.length > 80 ? url.slice(0,80)+'…' : url;
+  QRCode.toCanvas($('qrCanvas'), url, { width:220, margin:2, color:{dark:'#000',light:'#fff'} });
   $('qrModal').classList.add('open');
 }
-
 function closeQR()    { $('qrModal').classList.remove('open'); }
-
 function downloadQR() {
   const a = document.createElement('a');
-  a.download = (currentQRItem?.name.replace(/\s+/g, '_') || 'item') + '_AR_QR.png';
-  a.href = $('qrCanvas').toDataURL();
-  a.click();
+  a.download = (currentQRItem?.name.replace(/\s+/g,'_')||'item') + '_AR_QR.png';
+  a.href = $('qrCanvas').toDataURL(); a.click();
+}
+function copyQRUrl() {
+  navigator.clipboard.writeText(currentQRUrl).then(() => alert('Link copied!'));
 }
 
-function copyQRUrl() {
-  navigator.clipboard.writeText(currentQRUrl)
-    .then(() => alert('Link copied!'))
-    .catch(() => { prompt('Copy this link:', currentQRUrl); });
-}
+// ════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════
+function $(id)          { return document.getElementById(id); }
+function show(id)       { $(id).style.display = 'block'; }
+function hide(id)       { $(id).style.display = 'none'; }
+function flexShow(id)   { $(id).style.display = 'flex'; }
+function showFlexEl(id) { $(id).style.display = 'flex'; }
 </script>
 </body>
 </html>
