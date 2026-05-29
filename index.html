@@ -631,6 +631,12 @@ function startRenderLoop() {
   rafId = requestAnimationFrame(frame);
 }
 
+// ============================
+// DRAG ROTATION CONTROLS
+// ============================
+
+
+
 // ════════════════════════════════════════
 //  DRAW DISH — extract frame, remove BG, composite
 // ════════════════════════════════════════
@@ -639,103 +645,265 @@ const offCanvas = document.createElement('canvas');
 const offCtx    = offCanvas.getContext('2d', { willReadFrequently: true });
 
 function drawDish(ctx, dVid, W, H) {
-  // Dish size and position
-  const dishW = Math.round(W * DISH_SIZE_FRAC);
-  const dishH = dishW; // square source → can adjust
 
-  // Position: horizontally centred, vertically placed so it looks ON the table
-  // Bottom edge of dish sits at ~(H - H*0.22) from top
+  // =========================
+  // DISH SIZE + POSITION
+  // =========================
+
+  const dishW = Math.round(W * 0.52);
+  const dishH = dishW;
+
   const dishX = Math.round((W - dishW) / 2);
-  const dishY = Math.round(H - dishH - H * 0.22); // 22% from bottom
+
+  // Lower position = more realistic
+  const dishY = Math.round(H - dishH - H * 0.12);
+
+
+
+  // =========================
+  // NO BG REMOVAL MODE
+  // =========================
 
   if (bgMode === 'none') {
-    // No removal — just draw the video frame directly
+
+    // Soft table shadow
+    ctx.save();
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+      dishX + dishW / 2,
+      dishY + dishH * 0.88,
+      dishW * 0.28,
+      dishH * 0.06,
+      0,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+    ctx.filter = 'blur(12px)';
+    ctx.fill();
+
+    ctx.restore();
+
     ctx.drawImage(dVid, dishX, dishY, dishW, dishH);
-    drawShadow(ctx, dishX, dishY, dishW, dishH);
+
     return;
   }
 
-  // Size offscreen canvas to dish dimensions
+
+
+  // =========================
+  // OFFSCREEN CANVAS
+  // =========================
+
   if (offCanvas.width !== dishW || offCanvas.height !== dishH) {
-    offCanvas.width  = dishW;
+    offCanvas.width = dishW;
     offCanvas.height = dishH;
   }
 
-  // Draw dish video frame to offscreen canvas
   offCtx.clearRect(0, 0, dishW, dishH);
+
   offCtx.drawImage(dVid, 0, 0, dishW, dishH);
 
-  // Read pixels
+
+
+  // =========================
+  // READ PIXELS
+  // =========================
+
   let imgData;
+
   try {
     imgData = offCtx.getImageData(0, 0, dishW, dishH);
-  } catch(e) {
-    // CORS tainted — fall back to direct draw
+  } catch (e) {
+
+    // CORS fallback
     ctx.drawImage(dVid, dishX, dishY, dishW, dishH);
+
     return;
   }
 
-  const d  = imgData.data;
-  const t  = bgThresh;      // base threshold
-  const t2 = t + 35;        // soft edge end
+  const d = imgData.data;
+
+  const t = bgThresh;
+  const soft = 35;
+
+
+
+  // =========================
+  // BACKGROUND REMOVAL
+  // =========================
 
   for (let i = 0; i < d.length; i += 4) {
-    const r = d[i], g = d[i+1], b = d[i+2];
+
+    const r = d[i];
+    const g = d[i + 1];
+    const b = d[i + 2];
+
     let alpha = 255;
 
+
+
+    // -------------------------
+    // BLACK BG
+    // -------------------------
+
     if (bgMode === 'black') {
-      // Remove dark pixels
-      const lum = r * 0.299 + g * 0.587 + b * 0.114;
-      if      (lum < t)  alpha = 0;
-      else if (lum < t2) alpha = Math.round(((lum - t) / 35) * 255);
 
-    } else if (bgMode === 'white') {
-      // Remove bright pixels
       const lum = r * 0.299 + g * 0.587 + b * 0.114;
-      const inv = 255 - t, inv2 = 255 - t2;
-      if      (lum > inv)  alpha = 0;
-      else if (lum > inv2) alpha = Math.round(((inv - lum) / 35) * 255);
 
-    } else if (bgMode === 'green') {
-      // Chroma key — remove green pixels
-      // greenness = g - max(r,b)
-      const greenness = g - Math.max(r, b);
-      const spill     = g - Math.min(r, b); // also catch yellow-ish greens
-      const score     = Math.max(greenness, spill * 0.5);
-      if      (score > t)       alpha = 0;
-      else if (score > t - 30)  alpha = Math.round(((t - score) / 30) * 255);
-      // Despill: reduce green channel on soft edges
-      if (alpha < 255) {
-        d[i+1] = Math.round(g * (alpha / 255) + Math.min(r, b) * (1 - alpha / 255));
+      if (lum < t) {
+
+        alpha = 0;
+
+      } else if (lum < t + soft) {
+
+        alpha = Math.round(
+          ((lum - t) / soft) * 255
+        );
       }
     }
 
-    d[i+3] = Math.min(d[i+3], alpha);
+
+
+    // -------------------------
+    // WHITE BG
+    // -------------------------
+
+    else if (bgMode === 'white') {
+
+      const lum = r * 0.299 + g * 0.587 + b * 0.114;
+
+      const inv = 255 - t;
+
+      if (lum > inv) {
+
+        alpha = 0;
+
+      } else if (lum > inv - soft) {
+
+        alpha = Math.round(
+          ((inv - lum) / soft) * 255
+        );
+      }
+    }
+
+
+
+    // -------------------------
+    // GREEN SCREEN
+    // -------------------------
+
+    else if (bgMode === 'green') {
+
+      const greenness = g - Math.max(r, b);
+
+      if (greenness > t) {
+
+        alpha = 0;
+
+      } else if (greenness > t - soft) {
+
+        alpha = Math.round(
+          ((t - greenness) / soft) * 255
+        );
+      }
+
+      // Despill green edges
+      if (alpha < 255) {
+
+        d[i + 1] = Math.round(
+          g * (alpha / 255) +
+          Math.min(r, b) * (1 - alpha / 255)
+        );
+      }
+    }
+
+
+
+    // Apply alpha
+    d[i + 3] = Math.min(d[i + 3], alpha);
   }
+
+
+
+  // =========================
+  // PUT PIXELS BACK
+  // =========================
 
   offCtx.putImageData(imgData, 0, 0);
 
-  // Draw ground shadow first (behind dish)
-  drawShadow(ctx, dishX, dishY, dishW, dishH);
 
-  // Composite the keyed dish onto main canvas
-  ctx.drawImage(offCanvas, dishX, dishY, dishW, dishH);
+
+
+  // =========================
+  // DRAW DISH WITH BLENDING
+  // =========================
+
+  ctx.save();
+
+  ctx.globalAlpha = 0.98;
+
+  // Makes AR look more natural
+  ctx.globalCompositeOperation = 'screen';
+
+  ctx.drawImage(
+    offCanvas,
+    dishX,
+    dishY,
+    dishW,
+    dishH
+  );
+
+  ctx.restore();
 }
 
 function drawShadow(ctx, dishX, dishY, dishW, dishH) {
+
   const cx = dishX + dishW / 2;
-  const sy = dishY + dishH + 4;
-  const sw = dishW * 0.6;
-  const sh = 22;
-  const grad = ctx.createRadialGradient(cx, sy, 0, cx, sy, sw / 2);
-  grad.addColorStop(0, 'rgba(0,0,0,0.45)');
+
+  // Slightly higher shadow placement
+  const sy = dishY + dishH * 0.92;
+
+  // Wider softer shadow
+  const sw = dishW * 0.72;
+
+  // Taller blur
+  const sh = 30;
+
+  const grad = ctx.createRadialGradient(
+    cx,
+    sy,
+    0,
+    cx,
+    sy,
+    sw / 2
+  );
+
+  grad.addColorStop(0, 'rgba(0,0,0,0.38)');
+  grad.addColorStop(0.45, 'rgba(0,0,0,0.18)');
   grad.addColorStop(1, 'rgba(0,0,0,0)');
+
   ctx.save();
+
   ctx.scale(1, sh / (sw / 2));
+
   ctx.fillStyle = grad;
+
   ctx.beginPath();
-  ctx.arc(cx, sy * (sw/2) / sh, sw / 2, 0, Math.PI * 2);
+
+  ctx.arc(
+    cx,
+    sy * (sw / 2) / sh,
+    sw / 2,
+    0,
+    Math.PI * 2
+  );
+
   ctx.fill();
+
   ctx.restore();
 }
 
