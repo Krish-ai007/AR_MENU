@@ -583,7 +583,7 @@ function showARControls() {
   showFlexEl('arClose');
   showFlexEl('arFlip');
   show('arHint');
-  setTimeout(() => { autoActive = true; }, 300);
+  autoActive = false; // no auto-spin — manual drag only
   $('scanLine').classList.add('visible');
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
@@ -622,8 +622,6 @@ function onDragMove(e) {
 
 function onDragEnd() {
   isDragging = false;
-  // Resume auto-spin after 2 s idle
-  setTimeout(() => { if (!isDragging) autoActive = true; }, 2000);
 }
 
 // ════════════════════════════════════════
@@ -671,16 +669,7 @@ function startRenderLoop() {
       ctx.fillRect(0, 0, W, H);
     }
 
-    // ── 2. Auto-spin: advance currentFrac over time ──
-    // Speed: one full revolution every 9 seconds
-    if (autoActive && !isDragging && vidDuration > 0) {
-      currentFrac = (currentFrac + (dt / 9000)) % 1;
-      // Seek the (playing) video to the right frame
-      const target = currentFrac * vidDuration;
-      if (Math.abs(dVid.currentTime - target) > 0.15) {
-        dVid.currentTime = target;
-      }
-    }
+    // Auto-spin disabled — manual drag only
 
     // ── 3. Draw dish ──
     if (dishReady && dVid.readyState >= 2) {
@@ -694,11 +683,11 @@ function startRenderLoop() {
 //  DRAW DISH — BG removal + composite
 // ════════════════════════════════════════
 function drawDish(ctx, dVid, W, H) {
-  // Dish dimensions — centered horizontally, near the bottom
-  const dishW = Math.round(W * 0.72);
-  const dishH = Math.round(dishW * 0.80);
+  // Dish dimensions — centered on screen
+  const dishW = Math.round(W * 0.82);
+  const dishH = Math.round(dishW * 0.82);
   const dishX = Math.round((W - dishW) / 2);
-  const dishY = Math.round(H - dishH - H * 0.14);
+  const dishY = Math.round((H - dishH) / 2);  // true center
 
   // ── No BG removal mode ──
   if (bgMode === 'none') {
@@ -727,77 +716,80 @@ function drawDish(ctx, dVid, W, H) {
   const d = imgData.data;
   const W2 = dishW, H2 = dishH;
 
-  // ──────────────────────────────────────────
-  // IMPROVED BG REMOVAL — per-mode
-  // ──────────────────────────────────────────
-  // bgThresh slider (5–200) maps differently per mode:
-  //   black/white: tolerance around the BG color
-  //   green: greenness threshold
-  const tol   = bgThresh;        // base tolerance (user-controlled)
-  const feather = Math.max(12, tol * 0.45); // soft feather zone
+  // ════════════════════════════════════════
+  // ROBUST BG REMOVAL
+  // ════════════════════════════════════════
+  // Step 1: Sample the actual BG color from the 4 corners of THIS frame
+  // This is far more accurate than assuming pure white/black
+  function sampleCorner(px, py, size) {
+    let tr=0,tg=0,tb=0,n=0;
+    for(let row=py; row<Math.min(py+size,H2); row++) {
+      for(let col=px; col<Math.min(px+size,W2); col++) {
+        const i2=(row*W2+col)*4;
+        tr+=d[i2]; tg+=d[i2+1]; tb+=d[i2+2]; n++;
+      }
+    }
+    return n>0 ? [tr/n, tg/n, tb/n] : [0,0,0];
+  }
+  const cs = 8; // corner sample size
+  const c1=sampleCorner(0,0,cs), c2=sampleCorner(W2-cs,0,cs);
+  const c3=sampleCorner(0,H2-cs,cs), c4=sampleCorner(W2-cs,H2-cs,cs);
+  const bgR = (c1[0]+c2[0]+c3[0]+c4[0])/4;
+  const bgG = (c1[1]+c2[1]+c3[1]+c4[1])/4;
+  const bgB = (c1[2]+c2[2]+c3[2]+c4[2])/4;
+
+  // Scale tolerance: bgThresh maps 5-300 → tolerance in color-distance units
+  const tol     = bgThresh * 1.4;
+  const feather = Math.max(15, tol * 0.5);
 
   for (let i = 0; i < d.length; i += 4) {
     const r = d[i], g = d[i+1], b = d[i+2];
-    let dist = 0; // distance FROM the background color (0 = is bg, high = is foreground)
 
-    if (bgMode === 'black') {
-      // Background is (0,0,0) — measure Euclidean distance in RGB
-      dist = Math.sqrt(r*r + g*g + b*b);
-      // Also use luminance for extra sensitivity near-black
+    // Euclidean distance from sampled BG color
+    const dr = r - bgR, dg = g - bgG, db = b - bgB;
+    let dist = Math.sqrt(dr*dr + dg*dg + db*db);
+
+    // Extra logic per mode
+    if (bgMode === 'white') {
+      // Boost: high-luma + low-saturation pixels = definitely background
       const lum = r*0.299 + g*0.587 + b*0.114;
-      dist = Math.max(dist, lum * 1.4);
-
-    } else if (bgMode === 'white') {
-      // Background is (255,255,255) — measure distance from white
-      const dr = 255 - r, dg = 255 - g, db = 255 - b;
-      dist = Math.sqrt(dr*dr + dg*dg + db*db);
-      // Saturation boost: colourful pixels are definitely NOT background
       const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
-      const sat  = maxC > 0 ? (maxC - minC) / maxC : 0;
-      dist = Math.max(dist, sat * 280);
-      // Luminance guard: very bright + low saturation = white bg
+      const sat  = maxC > 0 ? (maxC-minC)/maxC : 0;
+      if (lum > 210 && sat < 0.18) dist = Math.min(dist, tol * 0.3); // force transparent
+      // Saturation boost for colourful foreground
+      dist += sat * 120;
+
+    } else if (bgMode === 'black') {
       const lum = r*0.299 + g*0.587 + b*0.114;
-      if (lum > 230 && sat < 0.15) dist = Math.min(dist, 8);
+      if (lum < 30) dist = Math.min(dist, tol * 0.3);
 
     } else if (bgMode === 'green') {
-      // Greenness = how much greener vs other channels
       const greenness = g - Math.max(r, b);
-      dist = 255 - Math.max(0, greenness);
-      // Despill on semi-transparent green-edge pixels
-      if (dist < 255) {
-        const ratio = dist / 255;
-        d[i+1] = Math.min(255, Math.round(g * ratio + Math.min(r,b) * (1-ratio)));
-      }
+      if (greenness > 20) dist = Math.min(dist, tol * 0.3);
+      // Despill
+      const ratio = Math.min(1, dist / (tol + feather));
+      d[i+1] = Math.min(255, Math.round(g*ratio + Math.min(r,b)*(1-ratio)));
     }
 
-    // Map distance to alpha:
-    //   dist <= tol           → fully transparent (background)
-    //   dist in [tol, tol+feather] → smooth ramp
-    //   dist > tol+feather    → fully opaque (foreground)
+    // Smoothstep alpha
     let alpha;
     if (dist <= tol) {
       alpha = 0;
     } else if (dist < tol + feather) {
       const t = (dist - tol) / feather;
-      // Smoothstep for nicer edge
-      alpha = Math.round(t * t * (3 - 2*t) * 255);
+      alpha = Math.round(t*t*(3-2*t) * 255);
     } else {
       alpha = 255;
     }
-
     d[i+3] = Math.min(d[i+3], alpha);
   }
 
-  // ── Second pass: erode 1px border to kill remaining fringe ──
-  // Scan the very edge rows/cols and kill any near-bg pixels there
-  if (bgMode === 'white' || bgMode === 'black') {
-    const borderPx = 3;
-    for (let row = 0; row < H2; row++) {
-      for (let col = 0; col < W2; col++) {
-        if (row < borderPx || row >= H2-borderPx || col < borderPx || col >= W2-borderPx) {
-          const idx = (row*W2 + col)*4;
-          d[idx+3] = 0;
-        }
+  // Edge erosion: kill a 4px border ring to remove stubborn fringe
+  const borderPx = 4;
+  for (let row = 0; row < H2; row++) {
+    for (let col = 0; col < W2; col++) {
+      if (row < borderPx || row >= H2-borderPx || col < borderPx || col >= W2-borderPx) {
+        d[(row*W2+col)*4+3] = 0;
       }
     }
   }
