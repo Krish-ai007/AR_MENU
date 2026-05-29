@@ -3,247 +3,302 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>360° AR Menu Viewer</title>
+<title>360° AR Menu</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; }
 
-  /* ── MANAGER ── */
-  #managerPage { padding: 1rem; max-width: 900px; margin: 0 auto; }
-  .page-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e5e0; }
-  .page-header h1 { font-size: 22px; font-weight: 600; color: #111; margin-bottom: 2px; }
-  .page-header p { font-size: 13px; color: #888; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .tab-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 13px; font-weight: 500; color: #666; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
-  .tab-btn.active { background: #1D9E75; color: white; border-color: #0F6E56; }
-  .panel { display: none; }
-  .panel.active { display: block; }
-  .card { background: white; border: 1px solid #e5e5e0; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 12px; }
-  .form-group { margin-bottom: 12px; }
-  .form-group label { display: block; font-size: 12px; font-weight: 500; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .form-row .form-group { flex: 1; min-width: 140px; }
-  input[type="text"], input[type="url"] { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; color: #111; outline: none; transition: border-color 0.15s; font-family: inherit; }
-  input:focus { border-color: #1D9E75; }
-  input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #ddd; background: white; color: #333; transition: all 0.15s; }
-  .btn:hover { background: #f5f5f0; }
-  .btn.primary { background: #1D9E75; border-color: #0F6E56; color: white; }
-  .btn.primary:hover { background: #0F6E56; }
-  .btn.danger { color: #d85a30; border-color: #d85a30; }
-  .btn.danger:hover { background: #fff5f0; }
-  .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .item-card { background: white; border: 1px solid #e5e5e0; border-radius: 12px; overflow: hidden; }
-  .item-thumb { width: 100%; height: 140px; background: #f0f0ea; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #e5e5e0; position: relative; overflow: hidden; }
-  .item-thumb video { width: 100%; height: 100%; object-fit: cover; }
-  .item-thumb .no-vid { text-align: center; color: #bbb; font-size: 12px; }
-  .item-body { padding: 10px 12px; }
-  .item-name { font-size: 14px; font-weight: 600; color: #111; margin-bottom: 2px; }
-  .item-price { font-size: 13px; color: #888; margin-bottom: 10px; }
-  .item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-  .empty-state { text-align: center; padding: 3rem 1rem; color: #bbb; }
-  .step-list { display: flex; flex-direction: column; gap: 12px; }
-  .step { display: flex; gap: 12px; align-items: flex-start; }
-  .step-num { width: 28px; height: 28px; border-radius: 50%; background: #1D9E75; color: white; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .step-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-  .step-text p { font-size: 13px; color: #777; line-height: 1.5; }
+/* ── MANAGER ── */
+#managerPage { padding: 1rem; max-width: 900px; margin: 0 auto; }
+.page-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e5e0; }
+.page-header h1 { font-size: 22px; font-weight: 600; color: #111; }
+.page-header p  { font-size: 13px; color: #888; margin-top: 2px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.tab-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 13px; font-weight: 500; color: #666; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+.tab-btn.active { background: #1D9E75; color: white; border-color: #0F6E56; }
+.panel { display: none; }
+.panel.active { display: block; }
+.card { background: white; border: 1px solid #e5e5e0; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 12px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 500; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.form-row .form-group { flex: 1; min-width: 140px; }
+input[type="text"], input[type="url"] { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; color: #111; outline: none; font-family: inherit; }
+input:focus { border-color: #1D9E75; }
+input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #ddd; background: white; color: #333; }
+.btn.primary { background: #1D9E75; border-color: #0F6E56; color: white; }
+.btn.danger   { color: #d85a30; border-color: #d85a30; }
+.item-grid  { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.item-card  { background: white; border: 1px solid #e5e5e0; border-radius: 12px; overflow: hidden; }
+.item-thumb { width: 100%; height: 140px; background: #f0f0ea; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #e5e5e0; overflow: hidden; }
+.item-thumb video { width: 100%; height: 100%; object-fit: cover; }
+.item-body  { padding: 10px 12px; }
+.item-name  { font-size: 14px; font-weight: 600; color: #111; margin-bottom: 2px; }
+.item-price { font-size: 13px; color: #888; margin-bottom: 10px; }
+.item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.empty-state  { text-align: center; padding: 3rem 1rem; color: #bbb; }
+.step-list { display: flex; flex-direction: column; gap: 12px; }
+.step { display: flex; gap: 12px; align-items: flex-start; }
+.step-num  { width: 28px; height: 28px; border-radius: 50%; background: #1D9E75; color: white; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.step-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.step-text p  { font-size: 13px; color: #777; line-height: 1.5; }
 
-  /* QR Modal */
-  .qr-modal { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-  .qr-modal.open { display: flex; }
-  .qr-box { background: white; border-radius: 16px; padding: 1.5rem; max-width: 320px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-  .qr-box h3 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-  .qr-box .qr-sub { font-size: 13px; color: #888; margin-bottom: 14px; }
-  #qrCanvas { border-radius: 8px; margin-bottom: 14px; border: 1px solid #f0f0ea; }
-  .qr-url { font-size: 10px; color: #aaa; word-break: break-all; margin-bottom: 14px; background: #f5f5f0; padding: 8px; border-radius: 6px; }
-  .qr-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+/* QR Modal */
+.qr-modal { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+.qr-modal.open { display: flex; }
+.qr-box { background: white; border-radius: 16px; padding: 1.5rem; max-width: 320px; width: 90%; text-align: center; }
+.qr-box h3  { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+.qr-sub     { font-size: 13px; color: #888; margin-bottom: 14px; }
+#qrCanvas   { border-radius: 8px; margin-bottom: 14px; border: 1px solid #eee; }
+.qr-url     { font-size: 10px; color: #aaa; word-break: break-all; margin-bottom: 14px; background: #f5f5f0; padding: 8px; border-radius: 6px; }
+.qr-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
-  /* ── AR VIEWER PAGE ── */
-  #viewerPage {
-    display: none;
-    position: fixed; inset: 0; z-index: 100;
-    background: #000;
-    overflow: hidden;
-  }
+/* ══════════════════════════════════════════
+   AR VIEWER  — completely rewritten
+══════════════════════════════════════════ */
+#viewerPage {
+  display: none;
+  position: fixed; inset: 0; z-index: 100;
+  background: #000;
+  overflow: hidden;
+}
 
-  #cameraFeed {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
+/* Full-screen live camera */
+#cameraFeed {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
 
-  #arScanOverlay {
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.05) 70%, rgba(0,0,0,0.5) 100%);
-    pointer-events: none;
-  }
+/* Dark radial for fallback (no camera) */
+#arFallbackBg {
+  display: none;
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, #1c1400 0%, #050505 70%);
+}
 
-  #scanLine {
-    position: absolute; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, #1D9E75, #EF9F27, #1D9E75, transparent);
-    animation: scanMove 3s linear infinite;
-    pointer-events: none;
-    opacity: 0.8;
-  }
-  @keyframes scanMove { 0%{top:10%} 50%{top:85%} 100%{top:10%} }
+/* Subtle vignette */
+#arVignette {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.45) 0%, transparent 18%),
+    linear-gradient(0deg,   rgba(0,0,0,0.75) 0%, transparent 28%);
+}
 
-  /* ── THE AR FOOD WRAP — no circular clip, canvas handles transparency ── */
-  #arFoodWrap {
-    position: absolute;
-    left: 50%; top: 50%;
-    transform: translate(-50%, -55%);
-    width: min(85vw, 380px);
-    aspect-ratio: 1/1;
-    touch-action: none; user-select: none;
-    filter: drop-shadow(0 24px 48px rgba(0,0,0,0.7));
-  }
+/* Scanning line */
+#scanLine {
+  position: absolute; left: 0; right: 0; height: 2px; pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, #1D9E75 40%, #EF9F27 60%, transparent 100%);
+  opacity: 0.7;
+  animation: scanMove 3s linear infinite;
+}
+@keyframes scanMove { 0%{top:8%} 50%{top:88%} 100%{top:8%} }
 
-  #bgCanvas { display: none; }
+/* AR brackets */
+.ar-bracket {
+  position: absolute; pointer-events: none;
+  width: 26px; height: 26px;
+  border-color: rgba(239,159,39,0.85); border-style: solid; border-width: 0;
+}
+.ar-bracket.tl { top: 18%; left: 6%;  border-top-width: 3px; border-left-width: 3px; border-radius: 3px 0 0 0; }
+.ar-bracket.tr { top: 18%; right: 6%; border-top-width: 3px; border-right-width: 3px; border-radius: 0 3px 0 0; }
+.ar-bracket.bl { bottom: 28%; left: 6%;  border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 3px; }
+.ar-bracket.br { bottom: 28%; right: 6%; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 3px 0; }
 
-  /* arCanvas is the output — NO border-radius, let transparency do the shape */
-  #arCanvas {
-    width: 100%; height: 100%;
-    display: block;
-    /* transparent background — shape comes from pixel manipulation */
-  }
+/* ── THE DISH — uses a <video> directly, NO canvas CORS issues ── */
+#arDishWrap {
+  display: none;
+  position: absolute;
+  /* centre in upper 60% of screen */
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  /* explicit px size — never 0 */
+  width: 300px;
+  height: 300px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /* floating shadow */
+  filter: drop-shadow(0 28px 40px rgba(0,0,0,0.75));
+}
 
-  .ar-corner {
-    position: absolute; width: 22px; height: 22px;
-    border-color: rgba(239,159,39,0.9); border-style: solid; border-width: 0;
-    pointer-events: none;
-  }
-  .ar-corner.tl { top: -4px; left: -4px; border-top-width: 3px; border-left-width: 3px; }
-  .ar-corner.tr { top: -4px; right: -4px; border-top-width: 3px; border-right-width: 3px; }
-  .ar-corner.bl { bottom: -4px; left: -4px; border-bottom-width: 3px; border-left-width: 3px; }
-  .ar-corner.br { bottom: -4px; right: -4px; border-bottom-width: 3px; border-right-width: 3px; }
+/*
+  The video is shown directly — background removal is done via
+  mix-blend-mode. For dark BG video: "screen" or "lighten" makes
+  dark pixels disappear over any background.
+  User can toggle mode.
+*/
+#arDishVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;          /* circular by default */
+  background: transparent;
+  /* KEY: screen blend removes dark BG pixels over camera feed */
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
 
-  #arShadow {
-    position: absolute; bottom: -22px; left: 50%;
-    transform: translateX(-50%);
-    width: 70%; height: 22px;
-    background: radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, transparent 70%);
-    pointer-events: none;
-  }
+/* Ground shadow beneath dish */
+#dishShadow {
+  position: absolute; bottom: -24px; left: 50%;
+  transform: translateX(-50%);
+  width: 65%; height: 18px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 70%);
+  pointer-events: none;
+}
 
-  #arHUD {
-    position: absolute; top: 0; left: 0; right: 0;
-    padding: 48px 20px 16px;
-    display: flex; justify-content: space-between; align-items: flex-start;
-  }
-  #arLabel { font-size: 10px; color: #EF9F27; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
-  #arItemName { font-size: 24px; font-weight: 800; color: white; text-shadow: 0 2px 12px rgba(0,0,0,0.8); line-height: 1.1; }
-  .ar-badge { background: rgba(29,158,117,0.2); color: #4ade80; font-size: 11px; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(29,158,117,0.4); font-weight: 600; backdrop-filter: blur(8px); }
+/* AR corner markers on dish */
+.dish-corner {
+  position: absolute; width: 18px; height: 18px;
+  border-color: rgba(239,159,39,0.8); border-style: solid; border-width: 0;
+  pointer-events: none;
+}
+.dish-corner.tl { top: 4px;    left: 4px;    border-top-width: 2px; border-left-width: 2px; }
+.dish-corner.tr { top: 4px;    right: 4px;   border-top-width: 2px; border-right-width: 2px; }
+.dish-corner.bl { bottom: 4px; left: 4px;    border-bottom-width: 2px; border-left-width: 2px; }
+.dish-corner.br { bottom: 4px; right: 4px;   border-bottom-width: 2px; border-right-width: 2px; }
 
-  #arHint {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, 130px);
-    background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-    color: white; font-size: 13px; padding: 8px 18px; border-radius: 24px;
-    border: 1px solid rgba(255,255,255,0.15);
-    animation: hintBlink 2s ease-in-out infinite;
-    white-space: nowrap;
-  }
-  @keyframes hintBlink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+/* Top HUD */
+#arHUD {
+  display: none;
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: 52px 18px 14px;
+  display: none;
+  flex-direction: row; justify-content: space-between; align-items: flex-start;
+}
+#arLabel    { font-size: 10px; color: #EF9F27; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
+#arItemName { font-size: 26px; font-weight: 800; color: white; text-shadow: 0 2px 14px rgba(0,0,0,0.9); line-height: 1.1; }
+.ar-live-badge { background: rgba(29,158,117,0.25); color: #4ade80; font-size: 11px; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(29,158,117,0.4); font-weight: 600; backdrop-filter: blur(8px); white-space: nowrap; margin-top: 4px; }
 
-  #arFooter {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    padding: 20px 20px 40px;
-    background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);
-    display: flex; justify-content: space-between; align-items: flex-end;
-  }
-  #arPrice { font-size: 32px; font-weight: 800; color: #EF9F27; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-  #arDesc { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 2px; }
-  #arAddBtn {
-    background: #EF9F27; color: #000; font-weight: 800; font-size: 15px;
-    padding: 14px 28px; border-radius: 50px; border: none; cursor: pointer;
-    box-shadow: 0 4px 20px rgba(239,159,39,0.5);
-    transition: transform 0.1s, box-shadow 0.1s;
-  }
-  #arAddBtn:active { transform: scale(0.96); }
+/* Swipe hint */
+#arHint {
+  display: none;
+  position: absolute; left: 50%; bottom: 180px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(10px);
+  color: white; font-size: 13px; padding: 8px 20px; border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.15);
+  white-space: nowrap;
+  animation: hintPulse 2s ease-in-out infinite;
+}
+@keyframes hintPulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
-  #arClose {
-    position: absolute; top: 48px; right: 20px;
-    width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.2); color: white;
-    font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  }
-  #arCamToggle {
-    position: absolute; top: 92px; right: 20px;
-    width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.2); color: white;
-    font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-  }
+/* Bottom bar */
+#arFooter {
+  display: none;
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 18px 20px 44px;
+  background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+  flex-direction: row; justify-content: space-between; align-items: flex-end;
+}
+#arPrice { font-size: 34px; font-weight: 900; color: #EF9F27; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+#arDesc  { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+#arAddBtn {
+  background: #EF9F27; color: #000; font-weight: 800; font-size: 15px;
+  padding: 15px 28px; border-radius: 50px; border: none; cursor: pointer;
+  box-shadow: 0 4px 24px rgba(239,159,39,0.55);
+}
+#arAddBtn:active { transform: scale(0.95); }
 
-  /* bg mode selector (new!) */
-  #bgModeBar {
-    position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 6px; background: rgba(0,0,0,0.55); backdrop-filter: blur(10px);
-    padding: 6px 10px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.12);
-  }
-  .bgm-btn {
-    padding: 5px 13px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    border: none; cursor: pointer; background: transparent; color: rgba(255,255,255,0.55);
-    transition: all 0.15s;
-  }
-  .bgm-btn.active { background: #1D9E75; color: white; }
+/* Blend mode buttons */
+#blendBar {
+  display: none;
+  position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%);
+  flex-direction: row; gap: 5px;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(12px);
+  padding: 6px 10px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
+}
+.blend-btn {
+  padding: 5px 13px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  border: none; cursor: pointer; color: rgba(255,255,255,0.5); background: transparent;
+}
+.blend-btn.active { background: #1D9E75; color: white; }
 
-  /* threshold slider */
-  #threshWrap {
-    position: absolute; bottom: 155px; left: 50%; transform: translateX(-50%);
-    display: flex; align-items: center; gap: 8px;
-    background: rgba(0,0,0,0.55); backdrop-filter: blur(10px);
-    padding: 7px 14px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.12);
-  }
-  #threshWrap label { font-size: 11px; color: rgba(255,255,255,0.6); white-space: nowrap; }
-  #threshSlider { width: 100px; accent-color: #EF9F27; }
+/* Shape buttons */
+#shapeBar {
+  display: none;
+  position: absolute; bottom: 185px; left: 50%; transform: translateX(-50%);
+  flex-direction: row; gap: 5px;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(12px);
+  padding: 6px 10px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
+}
+.shape-btn {
+  padding: 5px 13px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  border: none; cursor: pointer; color: rgba(255,255,255,0.5); background: transparent;
+}
+.shape-btn.active { background: #EF9F27; color: #000; }
 
-  #camPermScreen {
-    position: absolute; inset: 0; background: #0a0a0a;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 2rem; text-align: center; z-index: 10;
-  }
-  #camPermScreen .cam-icon { font-size: 64px; margin-bottom: 20px; }
-  #camPermScreen h2 { font-size: 22px; font-weight: 700; color: white; margin-bottom: 10px; }
-  #camPermScreen p { font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 28px; max-width: 280px; }
-  #camPermBtn {
-    background: #1D9E75; color: white; font-weight: 700; font-size: 15px;
-    padding: 14px 32px; border-radius: 50px; border: none; cursor: pointer;
-    margin-bottom: 12px; width: 100%; max-width: 260px;
-  }
-  #camSkipBtn {
-    background: transparent; color: #555; font-size: 13px;
-    padding: 10px; border: none; cursor: pointer; text-decoration: underline;
-  }
+/* Close / flip buttons */
+#arClose, #arFlip {
+  position: absolute; width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2); color: white;
+  font-size: 16px; cursor: pointer; display: none;
+  align-items: center; justify-content: center;
+}
+#arClose { top: 52px; right: 16px; font-size: 18px; }
+#arFlip  { top: 98px; right: 16px; }
 
-  #arFallbackBg {
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 50% 60%, #1a1200 0%, #0a0a0a 70%);
-    display: none;
-  }
+/* Permission screen */
+#camPermScreen {
+  position: absolute; inset: 0; background: #080808;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 2rem; text-align: center; z-index: 20;
+}
+.perm-icon { font-size: 64px; margin-bottom: 20px; }
+#camPermScreen h2 { font-size: 22px; font-weight: 700; color: white; margin-bottom: 10px; }
+#camPermScreen p  { font-size: 14px; color: #777; line-height: 1.6; margin-bottom: 28px; max-width: 280px; }
+#camPermBtn {
+  background: #1D9E75; color: white; font-weight: 700; font-size: 16px;
+  padding: 15px 32px; border-radius: 50px; border: none; cursor: pointer;
+  margin-bottom: 12px; width: 100%; max-width: 270px;
+}
+#camSkipBtn {
+  background: transparent; color: #555; font-size: 13px;
+  padding: 10px; border: none; cursor: pointer; text-decoration: underline;
+}
 
-  /* loading spinner over food wrap */
-  #arLoadingSpinner {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.4); border-radius: 50%;
-    pointer-events: none;
-  }
-  .spinner-ring {
-    width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2);
-    border-top-color: #EF9F27; border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* Loading overlay on top of dish */
+#arLoader {
+  display: none;
+  position: absolute; inset: 0; border-radius: 50%;
+  background: rgba(0,0,0,0.35);
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 10px;
+}
+#arLoader .ring {
+  width: 44px; height: 44px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: #EF9F27;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+#arLoader span { color: rgba(255,255,255,0.6); font-size: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error banner */
+#arError {
+  display: none;
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(200,50,30,0.85); backdrop-filter: blur(8px);
+  color: white; font-size: 13px; padding: 14px 20px; border-radius: 12px;
+  text-align: center; max-width: 280px; line-height: 1.5;
+  z-index: 30;
+}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════ MANAGER PAGE ═══════════════ -->
+<!-- ══════════ MANAGER ══════════ -->
 <div id="managerPage">
   <div class="page-header">
     <h1>360° AR menu system</h1>
-    <p>Add items, generate QR codes — customers see dishes floating in AR on their phone</p>
+    <p>Add items, generate QR codes — customers see dishes floating in AR</p>
   </div>
   <div class="tabs">
     <button class="tab-btn active" id="tab-items" onclick="switchTab('items')">
@@ -263,8 +318,7 @@
   <div id="panel-items" class="panel active">
     <div id="itemGrid" class="item-grid"></div>
     <div id="emptyState" class="empty-state" style="display:none;">
-      <svg width="48" height="48" fill="none" stroke="#ccc" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-      <p style="font-size:14px;margin-top:8px;">No items yet — go to "Add item"</p>
+      <p style="font-size:14px;">No items yet — go to "Add item"</p>
     </div>
   </div>
 
@@ -273,51 +327,51 @@
       <p style="font-size:15px;font-weight:600;margin-bottom:16px;">New menu item</p>
       <div class="form-row">
         <div class="form-group"><label>Item name *</label><input type="text" id="inp-name" placeholder="e.g. Margherita Pizza" /></div>
-        <div class="form-group" style="max-width:160px;"><label>Price *</label><input type="text" id="inp-price" placeholder="e.g. ₹349" /></div>
+        <div class="form-group" style="max-width:160px;"><label>Price *</label><input type="text" id="inp-price" placeholder="₹349" /></div>
       </div>
       <div class="form-group"><label>Description (optional)</label><input type="text" id="inp-desc" placeholder="e.g. With extra cheese" /></div>
       <div class="form-group">
-        <label>Video URL (Cloudinary / public .mp4) *</label>
+        <label>Video URL (Cloudinary public .mp4) *</label>
         <input type="url" id="inp-videourl" placeholder="https://res.cloudinary.com/..." />
-        <p style="font-size:11px;color:#aaa;margin-top:4px;">Paste your Cloudinary .mp4 URL here. This is what the QR code will load.</p>
+        <p style="font-size:11px;color:#aaa;margin-top:4px;">Upload to Cloudinary → copy the .mp4 URL. Must be public (no auth).</p>
       </div>
       <div class="form-group">
-        <label>Local video file (for preview only)</label>
-        <input type="file" id="inp-video" accept="video/*" onchange="previewVideo(this)" />
+        <label>Local video (preview only)</label>
+        <input type="file" id="inp-video" accept="video/*" onchange="previewVid(this)" />
         <video id="videoPreview" controls style="display:none;width:100%;max-height:180px;border-radius:8px;margin-top:8px;"></video>
       </div>
-      <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+      <div style="display:flex;gap:8px;margin-top:4px;">
         <button class="btn primary" onclick="addItem()">Save item</button>
         <button class="btn" onclick="clearForm()">Clear</button>
       </div>
-      <div id="saveMsg" style="display:none;margin-top:10px;font-size:13px;color:#1D9E75;font-weight:500;">✓ Item saved! Go to "Menu items" to get the QR code.</div>
+      <div id="saveMsg" style="display:none;margin-top:10px;font-size:13px;color:#1D9E75;font-weight:500;">✓ Saved! Go to "Menu items" to get the QR.</div>
     </div>
   </div>
 
   <div id="panel-howto" class="panel">
-    <div class="card" style="margin-bottom:12px;">
+    <div class="card">
       <p style="font-size:15px;font-weight:600;margin-bottom:16px;">How it works</p>
       <div class="step-list">
-        <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Shoot 360° video</h4><p>Place dish on a cake turntable or walk around it. Record 8–12 sec on phone.</p></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Upload to Cloudinary</h4><p>Free account at cloudinary.com → upload .mp4 → copy the URL ending in .mp4</p></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Add item + paste URL</h4><p>Fill in name, price, paste Cloudinary URL. Save.</p></div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-text"><h4>Download QR → print</h4><p>Click "Get QR" → Download PNG → print and stick next to dish on menu card.</p></div></div>
-        <div class="step"><div class="step-num">5</div><div class="step-text"><h4>Customer scans QR</h4><p>Phone asks for camera permission → they allow → dish appears floating on live camera view. Swipe to rotate!</p></div></div>
+        <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Shoot 360° video on black background</h4><p>Put dish on a cake turntable. Put a black cloth behind it. Record 8–12 sec slowly rotating.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Upload to Cloudinary</h4><p>cloudinary.com (free) → upload → copy the .mp4 URL.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Add item here</h4><p>Paste URL, name, price. Save.</p></div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text"><h4>Get QR → print</h4><p>Click "Get QR" on your item → Download → print for the table.</p></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text"><h4>Customer scans → sees dish in AR</h4><p>Camera opens, dish floats over their table. Drag left/right to spin 360°.</p></div></div>
       </div>
     </div>
-    <div class="card" style="background:#f0fff8;border-color:#9FE1CB;">
-      <p style="font-size:13px;font-weight:600;color:#0F6E56;margin-bottom:6px;">Tips for best AR results</p>
+    <div class="card" style="background:#f0fff8;border-color:#9FE1CB;margin-top:0;">
+      <p style="font-size:13px;font-weight:600;color:#0F6E56;margin-bottom:6px;">Blend mode tips</p>
       <p style="font-size:13px;color:#555;line-height:1.6;">
-        • <strong>Black background mode</strong>: shoot on pure black cloth — use the BG Removal slider to dial in threshold.<br>
-        • <strong>White/light background</strong>: shoot on white, flip to "Light BG" mode in the AR viewer.<br>
-        • <strong>PNG cutout</strong>: use a pre-cut image (no background) as a still — use "Still Image" mode.<br>
-        • For rotation, shoot a <strong>slow turntable video</strong> — dragging scrubs through frames for 360° feel.
+        <b>Screen</b> (default) — best for black background videos. Dark pixels vanish.<br>
+        <b>Normal</b> — shows full video with circular crop. Good for any background.<br>
+        <b>Lighten</b> — softer dark-BG removal, keeps more midtones.<br>
+        Use <b>Circle / Square</b> shape to switch the crop.
       </p>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════ QR MODAL ═══════════════ -->
+<!-- ══════════ QR MODAL ══════════ -->
 <div class="qr-modal" id="qrModal">
   <div class="qr-box">
     <h3 id="qrItemName"></h3>
@@ -332,514 +386,403 @@
   </div>
 </div>
 
-<!-- ═══════════════ AR VIEWER PAGE ═══════════════ -->
+<!-- ══════════ AR VIEWER ══════════ -->
 <div id="viewerPage">
 
+  <!-- Live camera -->
   <video id="cameraFeed" autoplay playsinline muted></video>
+
+  <!-- Fallback dark bg -->
   <div id="arFallbackBg"></div>
-  <div id="arScanOverlay"></div>
+
+  <!-- Overlays -->
+  <div id="arVignette"></div>
   <div id="scanLine"></div>
 
+  <!-- AR brackets on screen corners -->
+  <div class="ar-bracket tl"></div>
+  <div class="ar-bracket tr"></div>
+  <div class="ar-bracket bl"></div>
+  <div class="ar-bracket br"></div>
+
+  <!-- Camera permission -->
   <div id="camPermScreen">
-    <div class="cam-icon">📷</div>
+    <div class="perm-icon">📷</div>
     <h2>See this dish in AR</h2>
-    <p>Allow camera access to see the dish floating on your real table — like magic!</p>
-    <button id="camPermBtn" onclick="startCamera()">Allow camera & view</button>
+    <p>Allow camera to see the dish floating over your real table!</p>
+    <button id="camPermBtn" onclick="startCamera()">Allow camera & view in AR</button>
     <button id="camSkipBtn" onclick="skipCamera()">Skip — view without AR</button>
   </div>
 
-  <div id="arFoodWrap" style="display:none;">
-    <div class="ar-corner tl"></div>
-    <div class="ar-corner tr"></div>
-    <div class="ar-corner bl"></div>
-    <div class="ar-corner br"></div>
-    <div id="arShadow"></div>
-    <!-- hidden video — NEVER shown directly, only read via canvas -->
-    <video id="arFoodVideo" playsinline muted preload="auto"
-           style="display:none; position:absolute; pointer-events:none;"
-           crossorigin="anonymous"></video>
-    <canvas id="bgCanvas"></canvas>
-    <canvas id="arCanvas"></canvas>
-    <div id="arLoadingSpinner"><div class="spinner-ring"></div></div>
-  </div>
+  <!-- The dish -->
+  <div id="arDishWrap">
+    <div class="dish-corner tl"></div>
+    <div class="dish-corner tr"></div>
+    <div class="dish-corner bl"></div>
+    <div class="dish-corner br"></div>
+    <div id="dishShadow"></div>
 
-  <div id="arHint" style="display:none;">👆 Swipe left / right to rotate</div>
+    <!--
+      VIDEO shown directly — mix-blend-mode:screen removes dark BG.
+      crossorigin NOT set here to avoid CORS taint.
+      We just display it, no canvas pixel-read needed.
+    -->
+    <video id="arDishVideo"
+           playsinline muted preload="auto"
+           webkit-playsinline
+           style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;mix-blend-mode:screen;pointer-events:none;">
+    </video>
 
-  <div id="arHUD" style="display:none;">
-    <div id="arItemInfo">
-      <div id="arLabel">AR Preview</div>
-      <div id="arItemName">Loading...</div>
+    <!-- Loading indicator -->
+    <div id="arLoader">
+      <div class="ring"></div>
+      <span>Loading dish…</span>
     </div>
-    <div class="ar-badge">360° Live</div>
   </div>
 
-  <div id="arFooter" style="display:none;">
+  <!-- Error -->
+  <div id="arError"></div>
+
+  <!-- Swipe hint -->
+  <div id="arHint">👆 Drag to rotate 360°</div>
+
+  <!-- Top HUD -->
+  <div id="arHUD">
+    <div>
+      <div id="arLabel">AR Preview</div>
+      <div id="arItemName"></div>
+    </div>
+    <div class="ar-live-badge">360° Live</div>
+  </div>
+
+  <!-- Shape toggle -->
+  <div id="shapeBar">
+    <button class="shape-btn active" id="sh-circle" onclick="setShape('circle')">● Circle</button>
+    <button class="shape-btn"        id="sh-square" onclick="setShape('square')">■ Square</button>
+  </div>
+
+  <!-- Blend mode toggle -->
+  <div id="blendBar">
+    <button class="blend-btn active" id="bl-screen"  onclick="setBlend('screen')">Screen</button>
+    <button class="blend-btn"        id="bl-normal"  onclick="setBlend('normal')">Normal</button>
+    <button class="blend-btn"        id="bl-lighten" onclick="setBlend('lighten')">Lighten</button>
+  </div>
+
+  <!-- Bottom -->
+  <div id="arFooter">
     <div>
       <div id="arPrice"></div>
       <div id="arDesc"></div>
     </div>
-    <button id="arAddBtn">Add to order</button>
+    <button id="arAddBtn" onclick="addToOrder()">Add to order</button>
   </div>
 
-  <!-- BG removal mode selector -->
-  <div id="bgModeBar" style="display:none;">
-    <button class="bgm-btn active" id="bgm-black" onclick="setBGMode('black')">Dark BG</button>
-    <button class="bgm-btn" id="bgm-white" onclick="setBGMode('white')">Light BG</button>
-    <button class="bgm-btn" id="bgm-none" onclick="setBGMode('none')">No removal</button>
-  </div>
-
-  <!-- Threshold slider (shown in black/white mode) -->
-  <div id="threshWrap" style="display:none;">
-    <label>Edge: </label>
-    <input type="range" id="threshSlider" min="10" max="150" value="55" oninput="updateThresh(this.value)">
-    <label id="threshVal" style="color:#EF9F27;font-weight:700;">55</label>
-  </div>
-
-  <button id="arClose" onclick="closeViewer()" style="display:none;">✕</button>
-  <button id="arCamToggle" onclick="toggleCamera()" style="display:none;" title="Flip camera">⟳</button>
+  <!-- Controls -->
+  <button id="arClose" onclick="closeViewer()">✕</button>
+  <button id="arFlip"  onclick="flipCamera()">⟳</button>
 </div>
 
 <script>
-// ═══════════════════════════════
+// ════════════════════════════════
 //  DATA
-// ═══════════════════════════════
+// ════════════════════════════════
 let items = [];
-try { items = JSON.parse(localStorage.getItem('menu360items') || '[]'); } catch(e) { items = []; }
+try { items = JSON.parse(localStorage.getItem('menu360') || '[]'); } catch(e){}
 let videoBlobs = {};
-let currentQRItem = null;
-let currentQRUrl = '';
+let currentQRItem = null, currentQRUrl = '';
 
-// ═══════════════════════════════
-//  ROUTING
-// ═══════════════════════════════
-function getQueryParams() {
-  const p = new URLSearchParams(window.location.search);
-  return { view: p.get('view'), name: p.get('name'), price: p.get('price'), desc: p.get('desc'), v: p.get('v') };
-}
-
+// ════════════════════════════════
+//  ROUTE
+// ════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  const params = getQueryParams();
-  if (params.view === '1') {
-    document.getElementById('managerPage').style.display = 'none';
-    document.getElementById('viewerPage').style.display = 'block';
-    initARViewer(params);
+  const p = new URLSearchParams(location.search);
+  if (p.get('view') === '1') {
+    show('viewerPage');
+    hide('managerPage');
+    initViewer({ name: p.get('name'), price: p.get('price'), desc: p.get('desc'), v: p.get('v') });
   } else {
-    document.getElementById('managerPage').style.display = 'block';
+    show('managerPage');
     renderItems();
   }
 });
 
-// ═══════════════════════════════
-//  AR VIEWER — STATE
-// ═══════════════════════════════
-let arDragging      = false;
-let arStartX        = 0;
-let arStartTime     = 0;
-let arDuration      = 0;
-let cameraStream    = null;
-let facingMode      = 'environment';
-let arAnimFrame     = null;
-let currentARParams = null;
-let bgMode          = 'black';   // 'black' | 'white' | 'none'
-let bgThresh        = 55;        // brightness threshold for removal
-let bgThreshHigh    = 85;        // soft-edge end
-let videoReady      = false;     // true once video has enough data
-let isAutoPlaying   = false;     // auto-spin when not dragging
+// ════════════════════════════════
+//  AR VIEWER STATE
+// ════════════════════════════════
+let camStream    = null;
+let facingMode   = 'environment';
+let vidDuration  = 0;
+let isDragging   = false;
+let dragStartX   = 0;
+let dragStartT   = 0;
+let autoSpinId   = null;
+let autoActive   = false;
+let currentParams = null;
 
-function initARViewer(p) {
-  currentARParams = p;
-  document.getElementById('arItemName').textContent = p.name || 'Food item';
-  document.getElementById('arPrice').textContent    = p.price || '';
-  document.getElementById('arDesc').textContent     = p.desc  || '';
-  document.getElementById('camPermScreen').style.display = 'flex';
+// ════════════════════════════════
+//  INIT VIEWER
+// ════════════════════════════════
+function initViewer(p) {
+  currentParams = p;
+  $('arItemName').textContent = p.name  || 'Menu item';
+  $('arPrice').textContent    = p.price || '';
+  $('arDesc').textContent     = p.desc  || '';
+  show('camPermScreen');
 }
 
-// ═══════════════════════════════
+// ════════════════════════════════
 //  CAMERA
-// ═══════════════════════════════
+// ════════════════════════════════
 async function startCamera() {
-  document.getElementById('camPermScreen').style.display = 'none';
+  hide('camPermScreen');
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width:{ideal:1280}, height:{ideal:720} }, audio: false
     });
-    cameraStream = stream;
-    const camFeed = document.getElementById('cameraFeed');
-    camFeed.srcObject = stream;
-    camFeed.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
-    await camFeed.play();
-  } catch(err) {
-    console.warn('Camera denied:', err);
-    document.getElementById('arFallbackBg').style.display = 'block';
-    document.getElementById('cameraFeed').style.display = 'none';
+    const feed = $('cameraFeed');
+    feed.srcObject = camStream;
+    feed.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
+    await feed.play();
+  } catch(e) {
+    console.warn('cam denied', e);
+    fallbackBg();
   }
   launchAR();
 }
 
 function skipCamera() {
-  document.getElementById('camPermScreen').style.display = 'none';
-  document.getElementById('arFallbackBg').style.display = 'block';
-  document.getElementById('cameraFeed').style.display  = 'none';
+  hide('camPermScreen');
+  fallbackBg();
   launchAR();
 }
 
-async function toggleCamera() {
-  if (!cameraStream) return;
-  cameraStream.getTracks().forEach(t => t.stop());
+function fallbackBg() {
+  show('arFallbackBg');
+  $('cameraFeed').style.display = 'none';
+}
+
+async function flipCamera() {
+  if (!camStream) return;
+  camStream.getTracks().forEach(t => t.stop());
   facingMode = facingMode === 'environment' ? 'user' : 'environment';
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width:{ideal:1280}, height:{ideal:720} }, audio: false
     });
-    cameraStream = stream;
-    const camFeed = document.getElementById('cameraFeed');
-    camFeed.srcObject = stream;
-    camFeed.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
-    await camFeed.play();
+    const feed = $('cameraFeed');
+    feed.srcObject = camStream;
+    feed.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'none';
+    await feed.play();
   } catch(e) {}
 }
 
-// ═══════════════════════════════
-//  BG MODE
-// ═══════════════════════════════
-function setBGMode(mode) {
-  bgMode = mode;
-  document.querySelectorAll('.bgm-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('bgm-' + mode).classList.add('active');
-  document.getElementById('threshWrap').style.display = (mode !== 'none') ? 'flex' : 'none';
-}
-
-function updateThresh(val) {
-  bgThresh = parseInt(val);
-  bgThreshHigh = bgThresh + 30;
-  document.getElementById('threshVal').textContent = val;
-}
-
-// ═══════════════════════════════
-//  LAUNCH AR — VIDEO LOADING
-// ═══════════════════════════════
+// ════════════════════════════════
+//  LAUNCH AR
+// ════════════════════════════════
 function launchAR() {
-  const p = currentARParams;
-  const foodVideo = document.getElementById('arFoodVideo');
+  const vid = $('arDishVideo');
+  const p   = currentParams;
 
-  videoReady = false;
-  foodVideo.src = p.v || '';
-  // crossorigin needed for canvas pixel access on external URLs
-  foodVideo.crossOrigin = 'anonymous';
+  // Show controls
+  flexShow('arDishWrap');
+  flexShow('arHUD');
+  flexShow('arFooter');
+  flexShow('blendBar');
+  flexShow('shapeBar');
+  showFlex('arClose');
+  showFlex('arFlip');
+  flexShow('arLoader');
 
-  // Show UI immediately
-  document.getElementById('arFoodWrap').style.display   = 'block';
-  document.getElementById('arLoadingSpinner').style.display = 'flex';
-  document.getElementById('arHint').style.display       = 'none';
-  document.getElementById('arHUD').style.display        = 'flex';
-  document.getElementById('arFooter').style.display     = 'flex';
-  document.getElementById('arClose').style.display      = 'flex';
-  document.getElementById('arCamToggle').style.display  = 'flex';
-  document.getElementById('bgModeBar').style.display    = 'flex';
-  document.getElementById('threshWrap').style.display   = 'flex';
+  // Set video src
+  vid.src = p.v || '';
+  // Do NOT set crossOrigin — avoids CORS taint, we only display not pixel-read
 
-  // Start render loop immediately (will show spinner until video ready)
-  startARRender();
+  vid.onloadedmetadata = () => {
+    vidDuration = vid.duration || 10;
+    // Seek to midpoint for initial view
+    vid.currentTime = vidDuration * 0.5;
+  };
 
-  // Video event: enough data to scrub
-  foodVideo.addEventListener('loadedmetadata', onVideoMeta);
-  foodVideo.addEventListener('canplay', onVideoCanPlay);
-  foodVideo.addEventListener('error', onVideoError);
+  vid.oncanplay = () => {
+    hide('arLoader');
+    show('arHint');
+    // iOS requires play() to unlock seeking
+    vid.play().then(() => {
+      setTimeout(() => {
+        vid.pause();
+        vid.currentTime = vidDuration * 0.5;
+        beginAutoSpin();
+      }, 100);
+    }).catch(() => { vid.pause(); });
+  };
 
-  foodVideo.load();
+  vid.onerror = () => {
+    hide('arLoader');
+    showError('Video failed to load.<br>Check Cloudinary URL is public and ends in .mp4');
+  };
 
-  // Drag controls
-  const wrap = document.getElementById('arFoodWrap');
-  wrap.addEventListener('mousedown',  arOnStart, { passive: false });
-  window.addEventListener('mousemove', arOnMove,  { passive: false });
-  window.addEventListener('mouseup',   arOnEnd);
-  wrap.addEventListener('touchstart', arOnStart, { passive: false });
-  window.addEventListener('touchmove', arOnMove,  { passive: false });
-  window.addEventListener('touchend',  arOnEnd);
+  vid.load();
+
+  // Touch/mouse drag
+  const wrap = $('arDishWrap');
+  wrap.addEventListener('touchstart',  onDragStart, {passive:false});
+  wrap.addEventListener('mousedown',   onDragStart, {passive:false});
+  window.addEventListener('touchmove', onDragMove,  {passive:false});
+  window.addEventListener('mousemove', onDragMove,  {passive:false});
+  window.addEventListener('touchend',  onDragEnd);
+  window.addEventListener('mouseup',   onDragEnd);
 }
 
-function onVideoMeta() {
-  const foodVideo = document.getElementById('arFoodVideo');
-  arDuration = foodVideo.duration || 0;
-  // Seek to middle frame
-  foodVideo.currentTime = arDuration / 2;
-}
-
-function onVideoCanPlay() {
-  const foodVideo = document.getElementById('arFoodVideo');
-  arDuration = foodVideo.duration || 0;
-  videoReady = true;
-  document.getElementById('arLoadingSpinner').style.display = 'none';
-  document.getElementById('arHint').style.display = 'block';
-  // Pause — we'll scrub manually. Must call play() first on iOS to unlock frame seeking.
-  foodVideo.play().then(() => {
-    // Let it play for a tiny moment so iOS unlocks seek, then pause
-    setTimeout(() => {
-      foodVideo.pause();
-      foodVideo.currentTime = arDuration / 2;
-      startAutoSpin();
-    }, 80);
-  }).catch(() => {
-    // play() blocked — still try scrubbing
-    foodVideo.pause();
-  });
-}
-
-function onVideoError(e) {
-  console.error('Video load error', e);
-  document.getElementById('arLoadingSpinner').style.display = 'none';
-  // Show a fallback message
-  const canvas = document.getElementById('arCanvas');
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#fff';
-  ctx.font = '14px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('Video could not load', canvas.width/2, canvas.height/2);
-  ctx.fillText('Check CORS / URL settings', canvas.width/2, canvas.height/2 + 22);
-}
-
-// ═══════════════════════════════
-//  AUTO-SPIN (slow rotation when not dragging)
-// ═══════════════════════════════
-let autoSpinFrame = null;
-let autoSpinActive = false;
-
-function startAutoSpin() {
-  autoSpinActive = true;
-  let last = performance.now();
-  function spin(now) {
-    if (!autoSpinActive || arDragging || !arDuration) {
-      autoSpinFrame = requestAnimationFrame(spin);
-      last = now;
-      return;
-    }
-    const dt = now - last; last = now;
-    // ~12 seconds per full rotation
-    const step = (dt / 12000) * arDuration;
-    const vid = document.getElementById('arFoodVideo');
-    if (!vid.paused) { autoSpinFrame = requestAnimationFrame(spin); return; }
-    let t = (vid.currentTime + step) % arDuration;
-    vid.currentTime = t;
-    autoSpinFrame = requestAnimationFrame(spin);
+// ════════════════════════════════
+//  AUTO SPIN
+// ════════════════════════════════
+function beginAutoSpin() {
+  autoActive = true;
+  let prev = performance.now();
+  function tick(now) {
+    autoSpinId = requestAnimationFrame(tick);
+    if (!autoActive || isDragging || !vidDuration) { prev = now; return; }
+    const dt = now - prev; prev = now;
+    const vid = $('arDishVideo');
+    if (!vid.paused) return;
+    // 14 seconds per revolution
+    vid.currentTime = ((vid.currentTime + (dt / 14000) * vidDuration) % vidDuration);
   }
-  autoSpinFrame = requestAnimationFrame(spin);
+  autoSpinId = requestAnimationFrame(tick);
 }
 
-// ═══════════════════════════════
-//  CANVAS RENDER LOOP
-// ═══════════════════════════════
-function startARRender() {
-  if (arAnimFrame) { cancelAnimationFrame(arAnimFrame); arAnimFrame = null; }
-
-  const foodVideo = document.getElementById('arFoodVideo');
-  const arCanvas  = document.getElementById('arCanvas');
-  const bgCanvas  = document.getElementById('bgCanvas');
-  const ctx       = arCanvas.getContext('2d');
-  const bgCtx     = bgCanvas.getContext('2d');
-
-  function resize() {
-    const wrap = document.getElementById('arFoodWrap');
-    const w = wrap.offsetWidth  || 300;
-    const h = wrap.offsetHeight || 300;
-    arCanvas.width  = w; arCanvas.height  = h;
-    bgCanvas.width  = w; bgCanvas.height  = h;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  let lastVideoTime = -1;
-
-  function renderFrame() {
-    arAnimFrame = requestAnimationFrame(renderFrame);
-    const w = arCanvas.width, h = arCanvas.height;
-
-    if (!videoReady || foodVideo.readyState < 2) {
-      // draw nothing — spinner is shown
-      ctx.clearRect(0, 0, w, h);
-      return;
-    }
-
-    // Only re-process if the frame actually changed (perf optimisation)
-    const vt = foodVideo.currentTime;
-
-    // Always redraw (currentTime may not change every rAF during auto-spin)
-    // Draw video frame to offscreen canvas
-    bgCtx.drawImage(foodVideo, 0, 0, w, h);
-
-    if (bgMode === 'none') {
-      // No removal — just blit
-      ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(bgCanvas, 0, 0);
-      return;
-    }
-
-    // Get pixels and remove background
-    let imgData;
-    try {
-      imgData = bgCtx.getImageData(0, 0, w, h);
-    } catch(e) {
-      // CORS tainted — fall back to no-removal
-      ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(bgCanvas, 0, 0);
-      return;
-    }
-
-    const d = imgData.data;
-    const lo = bgThresh;
-    const hi = bgThreshHigh;
-    const range = hi - lo;
-
-    if (bgMode === 'black') {
-      // Remove DARK pixels (for black background video)
-      for (let i = 0; i < d.length; i += 4) {
-        const r = d[i], g = d[i+1], b = d[i+2];
-        const brightness = (r * 0.299 + g * 0.587 + b * 0.114); // perceptual luminance
-        if (brightness < lo) {
-          d[i+3] = 0;
-        } else if (brightness < hi) {
-          d[i+3] = Math.round(((brightness - lo) / range) * 255);
-        }
-        // else: keep fully opaque
-      }
-    } else if (bgMode === 'white') {
-      // Remove BRIGHT pixels (for white/light background)
-      const invLo = 255 - hi;
-      const invHi = 255 - lo;
-      for (let i = 0; i < d.length; i += 4) {
-        const r = d[i], g = d[i+1], b = d[i+2];
-        const brightness = (r * 0.299 + g * 0.587 + b * 0.114);
-        if (brightness > invHi) {
-          d[i+3] = 0;
-        } else if (brightness > invLo) {
-          d[i+3] = Math.round(((invHi - brightness) / range) * 255);
-        }
-      }
-    }
-
-    ctx.clearRect(0, 0, w, h);
-    ctx.putImageData(imgData, 0, 0);
-    lastVideoTime = vt;
-  }
-
-  renderFrame();
-}
-
-// ═══════════════════════════════
-//  DRAG / SWIPE — SCRUB VIDEO
-// ═══════════════════════════════
-function arOnStart(e) {
-  if (!videoReady) return;
-  arDragging = true;
-  autoSpinActive = false;
-  document.getElementById('arHint').style.display = 'none';
-  arStartX    = e.touches ? e.touches[0].clientX : e.clientX;
-  arStartTime = document.getElementById('arFoodVideo').currentTime;
+// ════════════════════════════════
+//  DRAG TO SCRUB
+// ════════════════════════════════
+function onDragStart(e) {
+  if (!vidDuration) return;
+  isDragging  = true;
+  autoActive  = false;
+  hide('arHint');
+  dragStartX = e.touches ? e.touches[0].clientX : e.clientX;
+  dragStartT = $('arDishVideo').currentTime;
   e.preventDefault();
 }
 
-function arOnMove(e) {
-  if (!arDragging || !arDuration) return;
+function onDragMove(e) {
+  if (!isDragging || !vidDuration) return;
   e.preventDefault();
-  const x = e.touches ? e.touches[0].clientX : e.clientX;
-  const delta = x - arStartX;
-  // 280px swipe = one full revolution
-  let t = arStartTime - (delta / 280) * arDuration;
-  t = ((t % arDuration) + arDuration) % arDuration;
-  const vid = document.getElementById('arFoodVideo');
-  if (vid.paused) {
-    vid.currentTime = t;
-  } else {
-    // If video is somehow playing, pause first
-    vid.pause();
-    vid.currentTime = t;
-  }
+  const x  = e.touches ? e.touches[0].clientX : e.clientX;
+  const dx = x - dragStartX;
+  // 260px = one full revolution
+  let t = dragStartT - (dx / 260) * vidDuration;
+  t = ((t % vidDuration) + vidDuration) % vidDuration;
+  const vid = $('arDishVideo');
+  if (!vid.paused) vid.pause();
+  vid.currentTime = t;
 }
 
-function arOnEnd() {
-  arDragging = false;
-  // Resume auto-spin after 2s of no interaction
-  setTimeout(() => {
-    if (!arDragging) autoSpinActive = true;
-  }, 2000);
+function onDragEnd() {
+  isDragging = false;
+  // Resume auto-spin after 2s
+  setTimeout(() => { if (!isDragging) autoActive = true; }, 2000);
 }
 
-// ═══════════════════════════════
+// ════════════════════════════════
+//  BLEND / SHAPE
+// ════════════════════════════════
+function setBlend(mode) {
+  $('arDishVideo').style.mixBlendMode = mode;
+  document.querySelectorAll('.blend-btn').forEach(b => b.classList.remove('active'));
+  $('bl-' + mode).classList.add('active');
+}
+
+function setShape(shape) {
+  $('arDishVideo').style.borderRadius = shape === 'circle' ? '50%' : '16px';
+  document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+  $('sh-' + shape).classList.add('active');
+}
+
+// ════════════════════════════════
 //  CLOSE VIEWER
-// ═══════════════════════════════
+// ════════════════════════════════
 function closeViewer() {
-  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-  if (arAnimFrame)  { cancelAnimationFrame(arAnimFrame); arAnimFrame = null; }
-  if (autoSpinFrame){ cancelAnimationFrame(autoSpinFrame); autoSpinFrame = null; }
-  autoSpinActive = false;
-  videoReady = false;
-
-  const vid = document.getElementById('arFoodVideo');
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  if (autoSpinId) { cancelAnimationFrame(autoSpinId); autoSpinId = null; }
+  const vid = $('arDishVideo');
   vid.pause(); vid.src = '';
+  autoActive = false; isDragging = false; vidDuration = 0;
 
-  document.getElementById('viewerPage').style.display  = 'none';
-  document.getElementById('managerPage').style.display = 'block';
-  window.history.replaceState({}, '', window.location.pathname);
+  hide('viewerPage');
+  show('managerPage');
+  history.replaceState({}, '', location.pathname);
   renderItems();
 }
 
-// ═══════════════════════════════
-//  MANAGER — TABS / FORM
-// ═══════════════════════════════
-function switchTab(name) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  document.getElementById('tab-'   + name).classList.add('active');
-  if (name === 'items') renderItems();
+function addToOrder() {
+  $('arAddBtn').textContent = '✓ Added!';
+  $('arAddBtn').style.background = '#1D9E75';
+  setTimeout(() => {
+    $('arAddBtn').textContent = 'Add to order';
+    $('arAddBtn').style.background = '#EF9F27';
+  }, 1800);
 }
 
-function previewVideo(input) {
+// ════════════════════════════════
+//  ERROR
+// ════════════════════════════════
+function showError(msg) {
+  const el = $('arError');
+  el.innerHTML = msg + '<br><br><button onclick="this.parentElement.style.display=\'none\'" style="background:white;color:#c33;border:none;padding:6px 14px;border-radius:8px;font-weight:600;cursor:pointer;">Dismiss</button>';
+  el.style.display = 'block';
+}
+
+// ════════════════════════════════
+//  MANAGER
+// ════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  $('panel-'+name).classList.add('active');
+  $('tab-'+name).classList.add('active');
+  if (name==='items') renderItems();
+}
+
+function previewVid(input) {
   const file = input.files[0]; if (!file) return;
   const url = URL.createObjectURL(file);
-  const vid = document.getElementById('videoPreview');
-  vid.src = url; vid.style.display = 'block';
-  videoBlobs['_pending'] = { file, url };
+  const v = $('videoPreview'); v.src = url; v.style.display='block';
+  videoBlobs['_p'] = {file, url};
 }
 
 function addItem() {
-  const name     = document.getElementById('inp-name').value.trim();
-  const price    = document.getElementById('inp-price').value.trim();
-  const desc     = document.getElementById('inp-desc').value.trim();
-  const videoUrl = document.getElementById('inp-videourl').value.trim();
-  if (!name || !price) { alert('Please enter item name and price.'); return; }
-  const id   = 'item_' + Date.now();
-  const item = { id, name, price, desc, videoUrl };
-  if (videoBlobs['_pending']) { videoBlobs[id] = videoBlobs['_pending']; delete videoBlobs['_pending']; }
+  const name  = $('inp-name').value.trim();
+  const price = $('inp-price').value.trim();
+  const desc  = $('inp-desc').value.trim();
+  const vurl  = $('inp-videourl').value.trim();
+  if (!name || !price) { alert('Name and price required.'); return; }
+  const id   = 'i_' + Date.now();
+  const item = {id, name, price, desc, videoUrl: vurl};
+  if (videoBlobs['_p']) { videoBlobs[id] = videoBlobs['_p']; delete videoBlobs['_p']; }
   items.push(item);
-  try { localStorage.setItem('menu360items', JSON.stringify(items)); } catch(e) {}
-  const msg = document.getElementById('saveMsg');
-  msg.style.display = 'block';
-  setTimeout(() => msg.style.display = 'none', 3000);
+  save();
+  $('saveMsg').style.display = 'block';
+  setTimeout(() => $('saveMsg').style.display = 'none', 3000);
 }
 
 function clearForm() {
-  ['inp-name','inp-price','inp-desc','inp-videourl'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('inp-video').value = '';
-  document.getElementById('videoPreview').style.display = 'none';
-  delete videoBlobs['_pending'];
+  ['inp-name','inp-price','inp-desc','inp-videourl'].forEach(id => $(id).value = '');
+  $('inp-video').value = '';
+  $('videoPreview').style.display = 'none';
+  delete videoBlobs['_p'];
 }
 
 function deleteItem(id) {
   if (!confirm('Remove this item?')) return;
   items = items.filter(i => i.id !== id);
   delete videoBlobs[id];
-  try { localStorage.setItem('menu360items', JSON.stringify(items)); } catch(e) {}
+  save();
   renderItems();
 }
 
 function renderItems() {
-  const grid  = document.getElementById('itemGrid');
-  const empty = document.getElementById('emptyState');
-  if (items.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  const grid = $('itemGrid'), empty = $('emptyState');
+  if (!items.length) { grid.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display = 'none';
   grid.innerHTML = items.map(item => `
     <div class="item-card">
@@ -847,91 +790,96 @@ function renderItems() {
         ${videoBlobs[item.id]
           ? `<video src="${videoBlobs[item.id].url}" muted loop autoplay playsinline></video>`
           : item.videoUrl
-          ? `<div style="text-align:center;color:#1D9E75;font-size:12px;padding:10px;">
-               <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 6px;"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-               Video ready
-             </div>`
-          : `<div class="no-vid"><svg width="24" height="24" fill="none" stroke="#ccc" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/><line x1="3" y1="3" x2="21" y2="21"/></svg><br>No video</div>`
+          ? `<div style="text-align:center;color:#1D9E75;font-size:12px;"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 6px;display:block"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>Video ready</div>`
+          : `<div style="color:#ccc;font-size:12px;text-align:center;">No video</div>`
         }
       </div>
       <div class="item-body">
         <div class="item-name">${item.name}</div>
-        <div class="item-price">${item.price}${item.desc ? ' · ' + item.desc : ''}</div>
+        <div class="item-price">${item.price}${item.desc ? ' · '+item.desc : ''}</div>
         <div class="item-actions">
-          <button class="btn" style="font-size:12px;padding:6px 10px;" onclick="showQR('${item.id}')">Get QR</button>
-          <button class="btn" style="font-size:12px;padding:6px 10px;" onclick="previewItem('${item.id}')">AR Preview</button>
-          <button class="btn danger" style="font-size:12px;padding:6px 10px;" onclick="deleteItem('${item.id}')">🗑</button>
+          <button class="btn" style="font-size:12px;padding:6px 10px" onclick="showQR('${item.id}')">Get QR</button>
+          <button class="btn" style="font-size:12px;padding:6px 10px" onclick="previewItem('${item.id}')">AR Preview</button>
+          <button class="btn danger" style="font-size:12px;padding:6px 10px" onclick="deleteItem('${item.id}')">🗑</button>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 function previewItem(id) {
-  const item = items.find(i => i.id === id); if (!item) return;
-  const videoUrl = item.videoUrl || (videoBlobs[id] ? videoBlobs[id].url : '');
-  document.getElementById('managerPage').style.display = 'none';
-  document.getElementById('viewerPage').style.display  = 'block';
+  const item = items.find(i=>i.id===id); if (!item) return;
+  const vurl = item.videoUrl || (videoBlobs[id]?.url || '');
 
-  // Reset all viewer state
-  videoReady = false; arDuration = 0; autoSpinActive = false;
-  if (arAnimFrame)  { cancelAnimationFrame(arAnimFrame); arAnimFrame = null; }
-  if (autoSpinFrame){ cancelAnimationFrame(autoSpinFrame); autoSpinFrame = null; }
+  // Full reset
+  if (camStream)   { camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+  if (autoSpinId)  { cancelAnimationFrame(autoSpinId); autoSpinId=null; }
+  const vid = $('arDishVideo');
+  vid.pause(); vid.src='';
+  autoActive=false; isDragging=false; vidDuration=0;
 
-  const vid = document.getElementById('arFoodVideo');
-  vid.pause(); vid.src = '';
+  // Reset UI visibility
+  const hideIds = ['arFallbackBg','arHUD','arFooter','blendBar','shapeBar','arHint','arError','arDishWrap'];
+  hideIds.forEach(i => { const el=$(i); el.style.display='none'; });
+  $('arClose').style.display = 'none';
+  $('arFlip').style.display  = 'none';
+  $('cameraFeed').style.display = 'block';
+  $('camPermScreen').style.display = 'flex';
+  $('arLoader').style.display = 'none';
 
-  document.getElementById('camPermScreen').style.display = 'flex';
-  document.getElementById('arFoodWrap').style.display    = 'none';
-  document.getElementById('arHint').style.display        = 'none';
-  document.getElementById('arHUD').style.display         = 'none';
-  document.getElementById('arFooter').style.display      = 'none';
-  document.getElementById('arClose').style.display       = 'none';
-  document.getElementById('arCamToggle').style.display   = 'none';
-  document.getElementById('bgModeBar').style.display     = 'none';
-  document.getElementById('threshWrap').style.display    = 'none';
-  document.getElementById('arFallbackBg').style.display  = 'none';
-  document.getElementById('cameraFeed').style.display    = 'block';
-  document.getElementById('arLoadingSpinner').style.display = 'flex';
+  // Reset blend to screen
+  vid.style.mixBlendMode = 'screen';
+  vid.style.borderRadius = '50%';
+  document.querySelectorAll('.blend-btn').forEach(b=>b.classList.remove('active'));
+  $('bl-screen').classList.add('active');
+  document.querySelectorAll('.shape-btn').forEach(b=>b.classList.remove('active'));
+  $('sh-circle').classList.add('active');
 
-  bgMode = 'black';
-  document.querySelectorAll('.bgm-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('bgm-black').classList.add('active');
+  hide('managerPage');
+  show('viewerPage');
 
-  initARViewer({ name: item.name, price: item.price, desc: item.desc, v: videoUrl });
+  initViewer({name:item.name, price:item.price, desc:item.desc, v:vurl});
 }
 
-// ═══════════════════════════════
+function save() {
+  try { localStorage.setItem('menu360', JSON.stringify(items)); } catch(e){}
+}
+
+// ════════════════════════════════
 //  QR
-// ═══════════════════════════════
-function buildViewerURL(item) {
+// ════════════════════════════════
+function buildURL(item) {
   const base = 'https://krish-ai007.github.io/AR_MENU/menu360_system.html';
-  const p = new URLSearchParams({ view: '1', name: item.name, price: item.price, desc: item.desc || '', v: item.videoUrl || '' });
-  return base + '?' + p.toString();
+  return base + '?' + new URLSearchParams({view:'1', name:item.name, price:item.price, desc:item.desc||'', v:item.videoUrl||''});
 }
 
 function showQR(id) {
-  const item = items.find(i => i.id === id); if (!item) return;
+  const item = items.find(i=>i.id===id); if (!item) return;
   currentQRItem = item;
-  document.getElementById('qrItemName').textContent = item.name;
-  document.getElementById('qrItemSub').textContent  = item.price + ' · Scan for AR 360° view';
-  const url = buildViewerURL(item);
-  currentQRUrl = url;
-  document.getElementById('qrUrl').textContent = url.length > 80 ? url.substring(0, 80) + '...' : url;
-  QRCode.toCanvas(document.getElementById('qrCanvas'), url, { width: 220, margin: 2, color: { dark: '#000', light: '#fff' } });
-  document.getElementById('qrModal').classList.add('open');
+  $('qrItemName').textContent = item.name;
+  $('qrItemSub').textContent  = item.price + ' · Scan for AR 360° view';
+  const url = buildURL(item); currentQRUrl = url;
+  $('qrUrl').textContent = url.length>80 ? url.slice(0,80)+'…' : url;
+  QRCode.toCanvas($('qrCanvas'), url, {width:220, margin:2, color:{dark:'#000',light:'#fff'}});
+  $('qrModal').classList.add('open');
 }
-
-function closeQR()    { document.getElementById('qrModal').classList.remove('open'); }
+function closeQR()    { $('qrModal').classList.remove('open'); }
 function downloadQR() {
   const a = document.createElement('a');
-  a.download = (currentQRItem ? currentQRItem.name.replace(/\s+/g,'_') : 'item') + '_AR_QR.png';
-  a.href = document.getElementById('qrCanvas').toDataURL();
-  a.click();
+  a.download = (currentQRItem?.name.replace(/\s+/g,'_')||'item') + '_AR_QR.png';
+  a.href = $('qrCanvas').toDataURL(); a.click();
 }
 function copyQRUrl() {
-  navigator.clipboard.writeText(currentQRUrl).then(() => alert('Link copied!'));
+  navigator.clipboard.writeText(currentQRUrl).then(()=>alert('Link copied!'));
 }
+
+// ════════════════════════════════
+//  HELPERS
+// ════════════════════════════════
+function $(id) { return document.getElementById(id); }
+function show(id)     { $(id).style.display = 'block'; }
+function hide(id)     { $(id).style.display = 'none'; }
+function flexShow(id) { $(id).style.display = 'flex'; }
+function showFlex(id) { $(id).style.display = 'flex'; }
 </script>
 </body>
 </html>
