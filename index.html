@@ -369,13 +369,14 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
     <button class="bg-btn"        id="bgb-white" onclick="setBG('white')">⚪ White</button>
     <button class="bg-btn"        id="bgb-green" onclick="setBG('green')">🟢 Green</button>
     <button class="bg-btn"        id="bgb-none"  onclick="setBG('none')">◻ None</button>
+    <button class="bg-btn" id="bgb-auto" onclick="autoSample()" style="color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.12);border-radius:20px;">🎯 Auto</button>
   </div>
 
   <!-- Threshold slider -->
   <div id="threshRow">
-    <label>Edge:</label>
-    <input type="range" id="threshSlider" min="5" max="200" value="60" oninput="onThresh(this.value)">
-    <span id="threshVal">60</span>
+    <label>Cut:</label>
+    <input type="range" id="threshSlider" min="5" max="300" value="80" oninput="onThresh(this.value)">
+    <span id="threshVal">80</span>
   </div>
 
   <!-- Footer -->
@@ -452,7 +453,7 @@ let currentFrac  = 0;    // current fractional position driven by auto-spin or d
 let rafId        = null;
 let autoActive   = false;
 let bgMode       = 'black';
-let bgThresh     = 60;
+let bgThresh     = 80;
 let camReady     = false;
 let dishReady    = false;
 let currentParams = null;
@@ -471,9 +472,9 @@ function initViewer(p) {
   $('arPrice').textContent    = p.price || '';
   $('arDesc').textContent     = p.desc  || '';
   bgMode = p.bgtype || 'black';
-  bgThresh = 60;
-  $('threshSlider').value = 60;
-  $('threshVal').textContent = '60';
+  bgThresh = 80;
+  $('threshSlider').value = 80;
+  $('threshVal').textContent = '80';
   // Sync BG buttons
   document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('active'));
   const bb = $('bgb-' + bgMode); if (bb) bb.classList.add('active');
@@ -695,7 +696,7 @@ function startRenderLoop() {
 function drawDish(ctx, dVid, W, H) {
   // Dish dimensions — centered horizontally, near the bottom
   const dishW = Math.round(W * 0.72);
-  const dishH = Math.round(dishW * 0.72); // slight vertical squash for perspective
+  const dishH = Math.round(dishW * 0.80);
   const dishX = Math.round((W - dishW) / 2);
   const dishY = Math.round(H - dishH - H * 0.14);
 
@@ -719,50 +720,86 @@ function drawDish(ctx, dVid, W, H) {
   try {
     imgData = offCtx.getImageData(0, 0, dishW, dishH);
   } catch(e) {
-    // CORS fallback — draw without BG removal
     ctx.drawImage(dVid, dishX, dishY, dishW, dishH);
     return;
   }
 
-  const d    = imgData.data;
-  const t    = bgThresh;
-  const soft = 30;
+  const d = imgData.data;
+  const W2 = dishW, H2 = dishH;
+
+  // ──────────────────────────────────────────
+  // IMPROVED BG REMOVAL — per-mode
+  // ──────────────────────────────────────────
+  // bgThresh slider (5–200) maps differently per mode:
+  //   black/white: tolerance around the BG color
+  //   green: greenness threshold
+  const tol   = bgThresh;        // base tolerance (user-controlled)
+  const feather = Math.max(12, tol * 0.45); // soft feather zone
 
   for (let i = 0; i < d.length; i += 4) {
     const r = d[i], g = d[i+1], b = d[i+2];
-    let alpha = 255;
+    let dist = 0; // distance FROM the background color (0 = is bg, high = is foreground)
 
     if (bgMode === 'black') {
-      const lum = r * 0.299 + g * 0.587 + b * 0.114;
-      if (lum < t) {
-        alpha = 0;
-      } else if (lum < t + soft) {
-        alpha = Math.round(((lum - t) / soft) * 255);
-      }
+      // Background is (0,0,0) — measure Euclidean distance in RGB
+      dist = Math.sqrt(r*r + g*g + b*b);
+      // Also use luminance for extra sensitivity near-black
+      const lum = r*0.299 + g*0.587 + b*0.114;
+      dist = Math.max(dist, lum * 1.4);
 
     } else if (bgMode === 'white') {
-      const lum = r * 0.299 + g * 0.587 + b * 0.114;
-      const inv = 255 - t;
-      if (lum > inv) {
-        alpha = 0;
-      } else if (lum > inv - soft) {
-        alpha = Math.round(((inv - lum) / soft) * 255);
-      }
+      // Background is (255,255,255) — measure distance from white
+      const dr = 255 - r, dg = 255 - g, db = 255 - b;
+      dist = Math.sqrt(dr*dr + dg*dg + db*db);
+      // Saturation boost: colourful pixels are definitely NOT background
+      const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
+      const sat  = maxC > 0 ? (maxC - minC) / maxC : 0;
+      dist = Math.max(dist, sat * 280);
+      // Luminance guard: very bright + low saturation = white bg
+      const lum = r*0.299 + g*0.587 + b*0.114;
+      if (lum > 230 && sat < 0.15) dist = Math.min(dist, 8);
 
     } else if (bgMode === 'green') {
+      // Greenness = how much greener vs other channels
       const greenness = g - Math.max(r, b);
-      if (greenness > t) {
-        alpha = 0;
-      } else if (greenness > t - soft) {
-        alpha = Math.round(((t - greenness) / soft) * 255);
-      }
-      // Despill
-      if (alpha < 255) {
-        d[i+1] = Math.min(255, Math.round(g * (alpha / 255) + Math.min(r, b) * (1 - alpha / 255)));
+      dist = 255 - Math.max(0, greenness);
+      // Despill on semi-transparent green-edge pixels
+      if (dist < 255) {
+        const ratio = dist / 255;
+        d[i+1] = Math.min(255, Math.round(g * ratio + Math.min(r,b) * (1-ratio)));
       }
     }
 
+    // Map distance to alpha:
+    //   dist <= tol           → fully transparent (background)
+    //   dist in [tol, tol+feather] → smooth ramp
+    //   dist > tol+feather    → fully opaque (foreground)
+    let alpha;
+    if (dist <= tol) {
+      alpha = 0;
+    } else if (dist < tol + feather) {
+      const t = (dist - tol) / feather;
+      // Smoothstep for nicer edge
+      alpha = Math.round(t * t * (3 - 2*t) * 255);
+    } else {
+      alpha = 255;
+    }
+
     d[i+3] = Math.min(d[i+3], alpha);
+  }
+
+  // ── Second pass: erode 1px border to kill remaining fringe ──
+  // Scan the very edge rows/cols and kill any near-bg pixels there
+  if (bgMode === 'white' || bgMode === 'black') {
+    const borderPx = 3;
+    for (let row = 0; row < H2; row++) {
+      for (let col = 0; col < W2; col++) {
+        if (row < borderPx || row >= H2-borderPx || col < borderPx || col >= W2-borderPx) {
+          const idx = (row*W2 + col)*4;
+          d[idx+3] = 0;
+        }
+      }
+    }
   }
 
   offCtx.putImageData(imgData, 0, 0);
@@ -770,7 +807,7 @@ function drawDish(ctx, dVid, W, H) {
   // ── Draw shadow underneath dish ──
   drawShadow(ctx, dishX, dishY, dishW, dishH);
 
-  // ── Composite dish onto camera frame (source-over = normal blend) ──
+  // ── Composite dish onto camera frame ──
   ctx.save();
   ctx.globalAlpha = 1.0;
   ctx.globalCompositeOperation = 'source-over';
@@ -809,6 +846,60 @@ function setBG(mode) {
 function onThresh(val) {
   bgThresh = parseInt(val);
   $('threshVal').textContent = val;
+}
+
+// Auto-sample: read corner pixels from the dish video to guess best threshold
+function autoSample() {
+  const dv = $('arDishVideo');
+  if (!dishReady || !dv) return;
+  const s = 80; // sample canvas size
+  const sc = document.createElement('canvas');
+  sc.width = s; sc.height = s;
+  const sx = sc.getContext('2d', { willReadFrequently: true });
+  sx.drawImage(dv, 0, 0, s, s);
+  let imgD;
+  try { imgD = sx.getImageData(0, 0, s, s); } catch(e) { return; }
+  const d = imgD.data;
+  // Sample the 4 corners (5x5 patch each)
+  const corners = [];
+  const patches = [[0,0],[s-5,0],[0,s-5],[s-5,s-5]];
+  patches.forEach(([px,py]) => {
+    let tr=0,tg=0,tb=0,n=0;
+    for(let row=py;row<Math.min(py+5,s);row++) {
+      for(let col=px;col<Math.min(px+5,s);col++) {
+        const i=(row*s+col)*4;
+        tr+=d[i]; tg+=d[i+1]; tb+=d[i+2]; n++;
+      }
+    }
+    corners.push([tr/n, tg/n, tb/n]);
+  });
+  // Average corner color
+  const avgR = corners.reduce((s,c)=>s+c[0],0)/4;
+  const avgG = corners.reduce((s,c)=>s+c[1],0)/4;
+  const avgB = corners.reduce((s,c)=>s+c[2],0)/4;
+  const lum = avgR*0.299 + avgG*0.587 + avgB*0.114;
+  const sat = (Math.max(avgR,avgG,avgB)-Math.min(avgR,avgG,avgB))/(Math.max(avgR,avgG,avgB)||1);
+  // Decide BG type from corner color
+  if (lum > 180 && sat < 0.2) {
+    setBG('white');
+    const newT = Math.round(Math.sqrt(Math.pow(255-avgR,2)+Math.pow(255-avgG,2)+Math.pow(255-avgB,2)) + 40);
+    bgThresh = Math.min(300, Math.max(30, newT));
+  } else if (lum < 60) {
+    setBG('black');
+    const newT = Math.round(Math.sqrt(avgR*avgR+avgG*avgG+avgB*avgB) + 30);
+    bgThresh = Math.min(300, Math.max(20, newT));
+  } else if (avgG - Math.max(avgR,avgB) > 20) {
+    setBG('green');
+    bgThresh = 80;
+  } else {
+    bgThresh = 80;
+  }
+  $('threshSlider').value = bgThresh;
+  $('threshVal').textContent = bgThresh;
+  // Flash the Auto button
+  const btn = $('bgb-auto');
+  btn.textContent = '✓ Done'; btn.style.color='#4ade80';
+  setTimeout(()=>{ btn.textContent='🎯 Auto'; btn.style.color='rgba(255,255,255,0.7)'; }, 1200);
 }
 
 // ════════════════════════════════════════
