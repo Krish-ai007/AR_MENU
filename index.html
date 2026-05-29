@@ -514,7 +514,7 @@ function previewItem(id) {
 
 // ════════ QR ════════
 function buildViewerURL(item) {
-  const base = window.location.href.split('?')[0];
+  const base = 'https://krish-ai007.github.io/AR_MENU/menu360_system.html';
   const videoUrl = item.videoUrl || (videoBlobs[item.id] ? videoBlobs[item.id].url : '');
   const p = new URLSearchParams({ view: '1', name: item.name, price: item.price, desc: item.desc || '', v: videoUrl });
   return base + '?' + p.toString();
