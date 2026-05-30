@@ -698,29 +698,102 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('mouseup',     onDragEnd);
 });
 
+// ── Drag state ──
+let pendingSeek   = false;   // true while waiting for 'seeked' to fire
+let targetTime    = 0;       // the time we most recently requested
+let lastSeekTime  = 0;       // last time we actually triggered a seek
+
 function onDragStart(e) {
   if (!dishReady || !vidDuration) return;
-  isDragging = true;
-  autoActive = false;
+  isDragging  = true;
+  autoActive  = false;
+  pendingSeek = false;
   hide('arHint');
   dragStartX = e.touches ? e.touches[0].clientX : e.clientX;
   dragStartT = $('arDishVideo').currentTime;
   e.preventDefault();
 }
+
 function onDragMove(e) {
   if (!isDragging || !vidDuration) return;
   e.preventDefault();
   const x  = e.touches ? e.touches[0].clientX : e.clientX;
   const dx = x - dragStartX;
   const dv = $('arDishVideo');
+
+  // Calculate target time from drag distance
   let t = dragStartT - (dx / 260) * vidDuration;
   t = ((t % vidDuration) + vidDuration) % vidDuration;
+  targetTime = t;
+
+  // Only issue a new seek if the previous one has resolved
+  // This prevents seek queue buildup on slow devices / iOS
+  if (!pendingSeek) {
+    doSeek(dv, t);
+  }
+}
+
+function doSeek(dv, t) {
+  pendingSeek = true;
   if (!dv.paused) dv.pause();
   dv.currentTime = t;
+  lastSeekTime = t;
+
+  // 'seeked' fires when the new frame is decoded and ready
+  dv.onseeked = () => {
+    pendingSeek = false;
+    dv.onseeked = null;
+
+    // If drag moved further while we were waiting, seek again immediately
+    if (isDragging && Math.abs(targetTime - lastSeekTime) > 0.02) {
+      doSeek(dv, targetTime);
+    }
+
+    // Force immediate canvas repaint with the new frame
+    forceRepaint(dv);
+  };
 }
+
+// Draw the new dish frame onto the canvas right now (outside the RAF loop)
+function forceRepaint(dv) {
+  const canvas = $('arMainCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const W = canvas.width, H = canvas.height;
+
+  // Redraw camera background
+  const camVid = $('camVideo');
+  if (camReady && camVid.readyState >= 2) {
+    const vw = camVid.videoWidth  || W;
+    const vh = camVid.videoHeight || H;
+    const scale = Math.max(W / vw, H / vh);
+    const sw = vw * scale, sh = vh * scale;
+    const sx = (W - sw) / 2, sy = (H - sh) / 2;
+    if (facingMode === 'user') {
+      ctx.save(); ctx.translate(W, 0); ctx.scale(-1, 1);
+      ctx.drawImage(camVid, sx, sy, sw, sh);
+      ctx.restore();
+    } else {
+      ctx.drawImage(camVid, sx, sy, sw, sh);
+    }
+  } else {
+    const grad = ctx.createRadialGradient(W/2, H*0.4, 0, W/2, H*0.4, H*0.7);
+    grad.addColorStop(0, '#1c1400');
+    grad.addColorStop(1, '#040404');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Draw dish with BG removal
+  if (dv.readyState >= 2) drawDish(ctx, dv, W, H);
+}
+
 function onDragEnd() {
-  isDragging = false;
-  // Do NOT resume autoActive — keep drag-only mode
+  isDragging  = false;
+  pendingSeek = false;
+  const dv = $('arDishVideo');
+  dv.onseeked = null;
+  // Keep drag-only — do NOT resume autoActive
 }
 
 // ════════════════════════════════════════
