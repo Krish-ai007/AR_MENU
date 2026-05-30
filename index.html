@@ -923,7 +923,7 @@ function save() {
 //  QR
 // ════════════════════════════════════════
 function buildURL(item) {
-  const base = 'https://krish-ai007.github.io/AR_MENU/menu360_system.html';
+  const base = 'https://krish-ai007.github.io/AR_MENU/index.html';
   return base + '?' + new URLSearchParams({ view:'1', name: item.name, price: item.price, desc: item.desc||'', v: item.videoUrl||'' });
 }
 function showQR(id) {
