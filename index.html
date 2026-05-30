@@ -597,8 +597,8 @@ let infoOpen = false;
 let lastFrameTime = 0;
 let particles = [];
 let useWebGL = false;
-// Track last known video time to detect stall
-let lastDishVideoTime = -1, stallCount = 0;
+// Once we've uploaded at least one dish frame, keep drawing it even during seeks
+let dishTextureValid = false;
 
 // ════════════════════════════════════════════════
 //  INIT VIEWER
@@ -862,14 +862,16 @@ function startRenderLoop() {
     }
 
     // ── Upload dish texture
-    const dishHasFrame = dishVid.readyState >= 2;
-    if (dishHasFrame) {
+    // KEY FIX: Only upload when readyState >= 2 (has a decoded frame),
+    // but ALWAYS tell the shader to draw it once we've had at least one frame.
+    // This keeps the previous frame in the texture during seeks on Android,
+    // preventing the disappear-on-touch flash.
+    if (dishVid.readyState >= 2) {
       gl.activeTexture(gl.TEXTURE1);
       uploadTexture(dishTexture, dishVid);
-      gl.uniform1i(uHasDish, 1);
-    } else {
-      gl.uniform1i(uHasDish, 0);
+      dishTextureValid = true;
     }
+    gl.uniform1i(uHasDish, dishTextureValid ? 1 : 0);
 
     // ── Compute dish rect in UV space
     const eScale = getEntranceScale(now);
@@ -1014,7 +1016,7 @@ function closeViewer() {
   camReady = false; dishReady = false;
   isDragging = false; vidDuration = 0; surfaceDetected = false;
   dishScale = 1.0; dishOffsetX = 0; dishOffsetY = 0;
-  infoOpen = false; particles = []; useWebGL = false;
+  infoOpen = false; particles = []; useWebGL = false; dishTextureValid = false;
   if (gl) { gl = null; glProgram = null; camTexture = null; dishTexture = null; }
   $('infoPanel').classList.remove('open');
   $('arBestsellerBadge').style.display = 'none';
@@ -1106,7 +1108,7 @@ function previewItem(id) {
   const dv = $('arDishVideo'); dv.pause(); dv.src = '';
   camReady = false; dishReady = false; isDragging = false;
   vidDuration = 0; surfaceDetected = false; dishScale = 1; dishOffsetX = 0; dishOffsetY = 0;
-  infoOpen = false; particles = []; useWebGL = false;
+  infoOpen = false; particles = []; useWebGL = false; dishTextureValid = false;
   if (gl) { gl = null; glProgram = null; camTexture = null; dishTexture = null; }
   ['arHUD','arFooter','arHint','pinchHint','arError','arLoader','surfaceRing','surfaceLabel','surfaceScan'].forEach(i => {
     const el = $(i); if (el) el.style.display = 'none';
