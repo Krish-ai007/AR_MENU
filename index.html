@@ -591,14 +591,18 @@ let isPinching = false, pinchStartDist = 0, pinchStartScale = 1;
 let isTwoFinger = false;
 let twoFingerStartX = 0, twoFingerStartY = 0;
 let dishOffsetStartX = 0, dishOffsetStartY = 0;
-let pendingSeek = false, targetTime = 0, lastSeekTime = 0;
 let entranceAnimating = false, entranceStart = 0;
 let infoOpen = false;
 let lastFrameTime = 0;
 let particles = [];
 let useWebGL = false;
-// Once we've uploaded at least one dish frame, keep drawing it even during seeks
+// Texture validity — once we have one good frame, never go blank
 let dishTextureValid = false;
+let camTextureValid  = false;
+// Drag-freeze: hold last good texture during finger-down seek
+let dragFrozen     = false;   // finger is down, texture frozen
+let dragTargetTime = 0;       // desired time to seek on lift
+let seekAfterDrag  = false;   // waiting for onseeked after lift
 
 // ════════════════════════════════════════════════
 //  INIT VIEWER
@@ -841,8 +845,7 @@ function startRenderLoop() {
   function frame(now) {
     rafId = requestAnimationFrame(frame);
 
-    // 30fps cap (prevents tearing on Android 60Hz screens during pixel ops)
-    if (now - lastFrameTime < 30) return;
+    if (now - lastFrameTime < 30) return; // 30fps cap
     lastFrameTime = now;
 
     if (!useWebGL || !gl || !dishReady) return;
@@ -852,28 +855,27 @@ function startRenderLoop() {
     const camVid  = $('camVideo');
     const dishVid = $('arDishVideo');
 
-    // ── Upload camera texture (every frame, GPU direct)
+    // ── Camera: upload every frame when available, keep last good frame otherwise
     if (camReady && camVid.readyState >= 2) {
       gl.activeTexture(gl.TEXTURE0);
       uploadTexture(camTexture, camVid);
-      gl.uniform1i(uHasCam, 1);
-    } else {
-      gl.uniform1i(uHasCam, 0);
+      camTextureValid = true;
     }
+    // Always show cam if we ever had a frame — never flicker to black
+    gl.uniform1i(uHasCam, camTextureValid ? 1 : 0);
 
-    // ── Upload dish texture
-    // KEY FIX: Only upload when readyState >= 2 (has a decoded frame),
-    // but ALWAYS tell the shader to draw it once we've had at least one frame.
-    // This keeps the previous frame in the texture during seeks on Android,
-    // preventing the disappear-on-touch flash.
-    if (dishVid.readyState >= 2) {
+    // ── Dish: only upload when NOT frozen (finger not down) AND readyState is good
+    // During drag, dragFrozen=true — we keep whatever is already in dishTexture
+    // This means the dish stays perfectly visible while finger is moving
+    if (!dragFrozen && dishVid.readyState >= 2) {
       gl.activeTexture(gl.TEXTURE1);
       uploadTexture(dishTexture, dishVid);
       dishTextureValid = true;
     }
+    // Always draw dish once we have any valid frame — never go blank
     gl.uniform1i(uHasDish, dishTextureValid ? 1 : 0);
 
-    // ── Compute dish rect in UV space
+    // ── Dish rect in UV space
     const eScale = getEntranceScale(now);
     const baseSize = W * 0.65;
     const dW = baseSize * dishScale * eScale;
@@ -884,17 +886,10 @@ function startRenderLoop() {
     const dX = (W - dW) / 2 + dishOffsetX;
     const dY = baseY + dishOffsetY;
 
-    // Clamp to canvas
-    const rx  = dX / W;
-    const ry  = dY / H;
-    const rw  = dW / W;
-    const rh  = dH / H;
+    const rx = dX / W, ry = dY / H, rw = dW / W, rh = dH / H;
     gl.uniform4f(uDishRect, rx, ry, rw, rh);
-
-    // ── Draw full-screen quad
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    // ── Overlay canvas (shadow + steam) 
     updateParticles(W, H, dX, dY, dW, dH);
   }
 
@@ -960,9 +955,15 @@ function getTouchDist(touches) {
 function onDragStart(e) {
   if (!dishReady || !vidDuration || isPinching) return;
   isDragging = true;
+  dragFrozen = true;        // lock texture — stop uploading new video frames
+  seekAfterDrag = false;
   hide('arHint');
   dragStartX = e.touches ? e.touches[0].clientX : e.clientX;
   dragStartT = $('arDishVideo').currentTime;
+  dragTargetTime = dragStartT;
+  // Pause the video so it holds the current frame perfectly
+  const dv = $('arDishVideo');
+  dv.pause();
   e.preventDefault();
 }
 
@@ -971,21 +972,45 @@ function onDragMove(e) {
   e.preventDefault();
   const x  = e.touches ? e.touches[0].clientX : e.clientX;
   const dx = x - dragStartX;
-  // Scrub without pausing — Android handles this much better
+  // Compute target time but DO NOT set currentTime yet — texture stays frozen
   let t = dragStartT - (dx / 260) * vidDuration;
   t = ((t % vidDuration) + vidDuration) % vidDuration;
-  const dv = $('arDishVideo');
-  // Only seek if difference is meaningful (reduces stutter)
-  if (Math.abs(dv.currentTime - t) > 0.05) {
-    dv.currentTime = t;
-  }
+  dragTargetTime = t;
+  // Show drag progress in the overlay (degrees rotated)
+  drawDragIndicator(dx);
+}
+
+function drawDragIndicator(dx) {
+  const ov = $('arOverlayCanvas');
+  if (!ov) return;
+  const W = ov.width, H = ov.height;
+  const pCtx = ov.getContext('2d');
+  // Draw a small arc at top of dish area showing rotation direction
+  const deg = Math.round((dx / 260) * 360);
+  const cx = W / 2, cy = H * 0.55;
+  pCtx.save();
+  pCtx.font = 'bold 13px -apple-system,sans-serif';
+  pCtx.textAlign = 'center';
+  pCtx.fillStyle = 'rgba(239,159,39,0.9)';
+  const arrow = dx > 0 ? '↻' : '↺';
+  pCtx.fillText(arrow + ' ' + Math.abs(deg) + '°', cx, cy - W * 0.38);
+  pCtx.restore();
 }
 
 function onDragEnd() {
   isDragging = false;
-  // Resume normal playback after drag
+  dragFrozen = false;
+  // Now seek to the target time on finger lift
   const dv = $('arDishVideo');
-  if (dv.paused) dv.play().catch(() => {});
+  seekAfterDrag = true;
+  dv.currentTime = dragTargetTime;
+  dv.onseeked = () => {
+    dv.onseeked = null;
+    seekAfterDrag = false;
+    dragFrozen = false;
+    // Resume normal looping playback from the seeked position
+    dv.play().catch(() => {});
+  };
 }
 
 // ════════════════════════════════════════════════
@@ -1016,7 +1041,9 @@ function closeViewer() {
   camReady = false; dishReady = false;
   isDragging = false; vidDuration = 0; surfaceDetected = false;
   dishScale = 1.0; dishOffsetX = 0; dishOffsetY = 0;
-  infoOpen = false; particles = []; useWebGL = false; dishTextureValid = false;
+  infoOpen = false; particles = []; useWebGL = false;
+  dishTextureValid = false; camTextureValid = false;
+  dragFrozen = false; seekAfterDrag = false;
   if (gl) { gl = null; glProgram = null; camTexture = null; dishTexture = null; }
   $('infoPanel').classList.remove('open');
   $('arBestsellerBadge').style.display = 'none';
@@ -1108,7 +1135,9 @@ function previewItem(id) {
   const dv = $('arDishVideo'); dv.pause(); dv.src = '';
   camReady = false; dishReady = false; isDragging = false;
   vidDuration = 0; surfaceDetected = false; dishScale = 1; dishOffsetX = 0; dishOffsetY = 0;
-  infoOpen = false; particles = []; useWebGL = false; dishTextureValid = false;
+  infoOpen = false; particles = []; useWebGL = false;
+  dishTextureValid = false; camTextureValid = false;
+  dragFrozen = false; seekAfterDrag = false;
   if (gl) { gl = null; glProgram = null; camTexture = null; dishTexture = null; }
   ['arHUD','arFooter','arHint','pinchHint','arError','arLoader','surfaceRing','surfaceLabel','surfaceScan'].forEach(i => {
     const el = $(i); if (el) el.style.display = 'none';
