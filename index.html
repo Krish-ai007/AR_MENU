@@ -64,29 +64,23 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
   background: #000; overflow: hidden;
 }
 
-/*
-  THE MAIN AR CANVAS — draws camera + composited dish together.
-  This is the ONLY visible output layer.
-*/
 #arMainCanvas {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   display: block;
 }
 
-/* Hidden source video for dish (off-screen, never displayed directly) */
 #arDishVideo {
   display: none;
   position: absolute; left: -9999px;
 }
 
-/* Hidden camera video (off-screen, read by canvas) */
 #camVideo {
   display: none;
   position: absolute; left: -9999px;
 }
 
-/* ── HUD overlays (on top of canvas) ── */
+/* ── HUD overlays ── */
 #arVignette {
   position: absolute; inset: 0; pointer-events: none;
   background:
@@ -150,35 +144,17 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
 }
 #arAddBtn:active { transform: scale(0.95); }
 
-/* BG removal toolbar */
-#bgBar {
-  position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%);
-  display: none; flex-direction: row; gap: 5px;
-  background: rgba(0,0,0,0.65); backdrop-filter: blur(12px);
-  padding: 7px 10px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.12);
-}
-.bg-btn {
-  padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700;
-  border: none; cursor: pointer; color: rgba(255,255,255,0.5); background: transparent;
-  transition: all 0.15s;
-}
-.bg-btn.active { color: #000; }
-.bg-btn#bgb-black.active  { background: #fff; }
-.bg-btn#bgb-white.active  { background: #EF9F27; }
-.bg-btn#bgb-green.active  { background: #22c55e; }
-.bg-btn#bgb-none.active   { background: #888; color: white; }
-
-/* Threshold row */
+/* Threshold slider — simplified, always visible */
 #threshRow {
-  position: absolute; bottom: 183px; left: 50%; transform: translateX(-50%);
-  display: none; flex-direction: row; align-items: center; gap: 8px;
+  position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%);
+  display: none; flex-direction: row; align-items: center; gap: 10px;
   background: rgba(0,0,0,0.65); backdrop-filter: blur(12px);
-  padding: 7px 14px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.12);
+  padding: 10px 18px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.12);
   white-space: nowrap;
 }
-#threshRow label { font-size: 11px; color: rgba(255,255,255,0.6); }
-#threshSlider { width: 90px; accent-color: #EF9F27; cursor: pointer; }
-#threshVal { font-size: 11px; color: #EF9F27; font-weight: 700; min-width: 24px; }
+#threshRow label { font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 500; }
+#threshSlider { width: 110px; accent-color: #EF9F27; cursor: pointer; }
+#threshVal { font-size: 12px; color: #EF9F27; font-weight: 700; min-width: 28px; }
 
 /* Close / flip */
 #arClose, #arFlip {
@@ -230,7 +206,7 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
 <div id="managerPage">
   <div class="page-header">
     <h1>360° AR Menu</h1>
-    <p>Add dishes — customers scan QR and see them AR on their table</p>
+    <p>Add dishes — customers scan QR and see them in AR on their table</p>
   </div>
   <div class="tabs">
     <button class="tab-btn active" id="tab-items" onclick="switchTab('items')">
@@ -263,16 +239,7 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
       <div class="form-group">
         <label>Video URL (Cloudinary .mp4) *</label>
         <input type="url" id="inp-videourl" placeholder="https://res.cloudinary.com/..."/>
-        <p style="font-size:11px;color:#aaa;margin-top:4px;">Upload to Cloudinary → copy .mp4 URL. Must be <b>public</b>.</p>
-      </div>
-      <div class="form-group">
-        <label>Background type (how you filmed)</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-          <label style="display:flex;align-items:center;gap:5px;font-size:13px;text-transform:none;letter-spacing:0;"><input type="radio" name="bgtype" value="black" checked> Black bg</label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:13px;text-transform:none;letter-spacing:0;"><input type="radio" name="bgtype" value="white"> White bg</label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:13px;text-transform:none;letter-spacing:0;"><input type="radio" name="bgtype" value="green"> Green bg</label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:13px;text-transform:none;letter-spacing:0;"><input type="radio" name="bgtype" value="none"> No removal</label>
-        </div>
+        <p style="font-size:11px;color:#aaa;margin-top:4px;">Upload to Cloudinary → copy the .mp4 URL. Must be <b>public</b>. Shoot on <b>black background</b>.</p>
       </div>
       <div class="form-group">
         <label>Local video (preview only)</label>
@@ -291,20 +258,20 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
     <div class="card">
       <p style="font-size:15px;font-weight:600;margin-bottom:16px;">How it works</p>
       <div class="step-list">
-        <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Shoot on a solid background</h4><p>Place dish on a turntable. Use <b>black cloth</b>, <b>white paper</b>, or <b>green screen</b> behind it. Rotate slowly 360°, record 8–12 sec.</p></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Upload to Cloudinary</h4><p>cloudinary.com (free) → Upload → copy the .mp4 URL.</p></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Add item here</h4><p>Paste URL, enter name, price. Select which background you used. Save.</p></div></div>
+        <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Shoot on black background</h4><p>Place dish on a turntable with <b>black cloth</b> behind and underneath. Good lighting on the dish. Rotate slowly 360°, record 8–12 sec.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Upload to Cloudinary</h4><p>cloudinary.com (free) → Upload → copy the .mp4 URL. Set <b>CORS allowed origin</b> to your domain in Cloudinary settings.</p></div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Add item here</h4><p>Paste URL, enter name and price. Save.</p></div></div>
         <div class="step"><div class="step-num">4</div><div class="step-text"><h4>Get QR → print</h4><p>Click "Get QR" → Download PNG → print for the table.</p></div></div>
-        <div class="step"><div class="step-num">5</div><div class="step-text"><h4>Customer scans → dish on their table</h4><p>Camera opens. The dish appears floating on their real table with background removed. Drag to spin 360°.</p></div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-text"><h4>Customer scans → dish appears in AR</h4><p>Camera opens. The dish floats on the real table. Drag to spin 360°. Use the Cut slider to fine-tune edge if needed.</p></div></div>
       </div>
     </div>
     <div class="card" style="background:#fffbf0;border-color:#f5d78e;">
-      <p style="font-size:13px;font-weight:600;color:#7a5a00;margin-bottom:6px;">Best background for shooting</p>
+      <p style="font-size:13px;font-weight:600;color:#7a5a00;margin-bottom:6px;">Tips for best black background removal</p>
       <p style="font-size:13px;color:#555;line-height:1.6;">
-        🟢 <b>Green screen</b> — best results, cleanest edges<br>
-        ⚫ <b>Black cloth</b> — great for most food<br>
-        ⚪ <b>White paper/wall</b> — works for dark-coloured food<br><br>
-        In the AR viewer, use the <b>BG</b> buttons + slider to fine-tune the cutout live.
+        ⚫ Use <b>matte black cloth</b> — avoid shiny surfaces that reflect light<br>
+        💡 Light the dish <b>from above/sides</b>, keep background dark<br>
+        📐 Keep dish <b>well separated</b> from the background cloth<br>
+        🎚 In the AR viewer, use the <b>Cut slider</b> to fine-tune edges
       </p>
     </div>
   </div>
@@ -328,14 +295,11 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
 <!-- ══════════ AR VIEWER ══════════ -->
 <div id="viewerPage">
 
-  <!-- Hidden source videos — never displayed, only read by canvas -->
   <video id="camVideo"    autoplay playsinline muted></video>
   <video id="arDishVideo" playsinline muted preload="auto" webkit-playsinline></video>
 
-  <!-- Single composited output canvas — shows camera + dish together -->
   <canvas id="arMainCanvas"></canvas>
 
-  <!-- UI overlays on top of canvas -->
   <div id="arVignette"></div>
   <div id="scanLine"></div>
   <div class="ar-bracket tl"></div>
@@ -373,19 +337,11 @@ input[type="file"] { padding: 6px; font-size: 13px; width: 100%; }
     <div class="ar-live-badge">360° Live</div>
   </div>
 
-  <!-- BG removal toolbar -->
-  <div id="bgBar">
-    <button class="bg-btn active" id="bgb-black" onclick="setBG('black')">⚫ Black</button>
-    <button class="bg-btn"        id="bgb-white" onclick="setBG('white')">⚪ White</button>
-    <button class="bg-btn"        id="bgb-green" onclick="setBG('green')">🟢 Green</button>
-    <button class="bg-btn"        id="bgb-none"  onclick="setBG('none')">◻ None</button>
-  </div>
-
-  <!-- Threshold slider -->
+  <!-- Simplified threshold slider only -->
   <div id="threshRow">
-    <label>Edge:</label>
-    <input type="range" id="threshSlider" min="5" max="200" value="60" oninput="onThresh(this.value)">
-    <span id="threshVal">60</span>
+    <label>Cut:</label>
+    <input type="range" id="threshSlider" min="10" max="120" value="45" oninput="onThresh(this.value)">
+    <span id="threshVal">45</span>
   </div>
 
   <!-- Footer -->
@@ -419,11 +375,10 @@ window.addEventListener('DOMContentLoaded', () => {
     hide('managerPage');
     show('viewerPage');
     initViewer({
-      name:   p.get('name')   || '',
-      price:  p.get('price')  || '',
-      desc:   p.get('desc')   || '',
-      v:      p.get('v')      || '',
-      bgtype: p.get('bgtype') || 'black'
+      name:  p.get('name')  || '',
+      price: p.get('price') || '',
+      desc:  p.get('desc')  || '',
+      v:     p.get('v')     || ''
     });
   } else {
     show('managerPage');
@@ -442,17 +397,13 @@ let dragStartX  = 0;
 let dragStartT  = 0;
 let rafId       = null;
 let autoActive  = false;
-let bgMode      = 'black';   // black | white | green | none
-let bgThresh    = 60;
+// Black background removal threshold — tuned for black cloth
+// Lower = more aggressive (removes more), Higher = keeps more
+let bgThresh    = 45;
+let softEdge    = 30;  // feathering width in luminance units
 let camReady    = false;
 let dishReady   = false;
 let currentParams = null;
-
-// Dish display position on canvas (fraction of canvas height, from bottom)
-// 0.35 = dish sits in bottom 35% — looks like it's ON the table
-const DISH_BOTTOM_FRAC = 0.38;
-// Dish size as fraction of canvas width
-const DISH_SIZE_FRAC   = 0.72;
 
 // ════════════════════════════════════════
 //  INIT VIEWER
@@ -462,10 +413,6 @@ function initViewer(p) {
   $('arItemName').textContent = p.name  || 'Menu item';
   $('arPrice').textContent    = p.price || '';
   $('arDesc').textContent     = p.desc  || '';
-  bgMode = p.bgtype || 'black';
-  // Sync buttons
-  document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('active'));
-  const bb = $('bgb-' + bgMode); if (bb) bb.classList.add('active');
   show('camPermScreen');
 }
 
@@ -521,9 +468,9 @@ function loadDishVideo() {
 
   $('loaderMsg').textContent = 'Loading dish video…';
 
-  // Try loading without crossorigin first (avoids CORS block on display)
+  // crossorigin="anonymous" is required for getImageData() to work (CORS)
   vid.setAttribute('crossorigin', 'anonymous');
-vid.src = p.v;
+  vid.src = p.v;
 
   vid.onloadedmetadata = () => {
     vidDuration = vid.duration || 10;
@@ -534,15 +481,24 @@ vid.src = p.v;
     dishReady = true;
     hide('arLoader');
     showARControls();
-    // iOS seek unlock
+    // iOS requires a play() call to unlock seeking
     vid.play().then(() => {
-      setTimeout(() => { vid.pause(); vid.currentTime = vidDuration * 0.5; startRenderLoop(); autoActive = false; }, 120);
-    }).catch(() => { vid.pause(); startRenderLoop(); autoActive = false; });
+      setTimeout(() => {
+        vid.pause();
+        vid.currentTime = vidDuration * 0.5;
+        startRenderLoop();
+        autoActive = false; // drag only — no auto spin
+      }, 120);
+    }).catch(() => {
+      vid.pause();
+      startRenderLoop();
+      autoActive = false;
+    });
   };
 
   vid.onerror = () => {
     hide('arLoader');
-    showError('Could not load video.<br>Make sure the Cloudinary URL is public and ends in .mp4<br>Also ensure "Allowed origins" in Cloudinary includes your domain.');
+    showError('Could not load video.<br>Check: 1) Cloudinary URL is public .mp4  2) CORS is enabled in Cloudinary settings for your domain.');
   };
 
   vid.load();
@@ -554,13 +510,11 @@ vid.src = p.v;
 function showARControls() {
   flexShow('arHUD');
   flexShow('arFooter');
-  flexShow('bgBar');
   flexShow('threshRow');
   showFlexEl('arClose');
   showFlexEl('arFlip');
   show('arHint');
   $('scanLine').classList.add('visible');
-  // Size the main canvas to fill screen
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 }
@@ -572,17 +526,14 @@ function resizeCanvas() {
 }
 
 // ════════════════════════════════════════
-//  MAIN RENDER LOOP — composite cam + dish
+//  MAIN RENDER LOOP
 // ════════════════════════════════════════
-let prevVidTime = -1;
-
 function startRenderLoop() {
   if (rafId) cancelAnimationFrame(rafId);
   const canvas = $('arMainCanvas');
   const ctx    = canvas.getContext('2d', { willReadFrequently: true });
   const camVid = $('camVideo');
   const dVid   = $('arDishVideo');
-
   let lastT = performance.now();
 
   function frame(now) {
@@ -590,15 +541,13 @@ function startRenderLoop() {
     const W = canvas.width, H = canvas.height;
     ctx.clearRect(0, 0, W, H);
 
-    // ── 1. Draw camera (or dark fallback) ──
+    // ── 1. Camera (or dark fallback) ──
     if (camReady && camVid.readyState >= 2) {
-      // Fill canvas with camera, maintaining aspect ratio (cover)
       const vw = camVid.videoWidth  || W;
       const vh = camVid.videoHeight || H;
       const scale = Math.max(W / vw, H / vh);
       const sw = vw * scale, sh = vh * scale;
       const sx = (W - sw) / 2, sy = (H - sh) / 2;
-      // Mirror for front cam
       if (facingMode === 'user') {
         ctx.save();
         ctx.translate(W, 0); ctx.scale(-1, 1);
@@ -608,7 +557,6 @@ function startRenderLoop() {
         ctx.drawImage(camVid, sx, sy, sw, sh);
       }
     } else {
-      // Dark gradient background (no cam)
       const grad = ctx.createRadialGradient(W/2, H*0.4, 0, W/2, H*0.4, H*0.7);
       grad.addColorStop(0, '#1c1400');
       grad.addColorStop(1, '#040404');
@@ -616,14 +564,14 @@ function startRenderLoop() {
       ctx.fillRect(0, 0, W, H);
     }
 
-    // ── 2. Auto-spin ──
+    // ── 2. Auto-spin (only when autoActive) ──
     if (autoActive && !isDragging && dVid.paused && vidDuration > 0) {
       const dt = now - lastT;
       dVid.currentTime = ((dVid.currentTime + (dt / 13000) * vidDuration) % vidDuration);
     }
     lastT = now;
 
-    // ── 3. Draw dish with background removal ──
+    // ── 3. Draw dish ──
     if (dishReady && dVid.readyState >= 2) {
       drawDish(ctx, dVid, W, H);
     }
@@ -631,292 +579,107 @@ function startRenderLoop() {
   rafId = requestAnimationFrame(frame);
 }
 
-// ============================
-// DRAG ROTATION CONTROLS
-// ============================
-
-
-
 // ════════════════════════════════════════
-//  DRAW DISH — extract frame, remove BG, composite
+//  OFFSCREEN CANVAS (reused every frame)
 // ════════════════════════════════════════
-// Offscreen canvas for dish processing
 const offCanvas = document.createElement('canvas');
 const offCtx    = offCanvas.getContext('2d', { willReadFrequently: true });
 
+// ════════════════════════════════════════
+//  DRAW DISH — black BG removal + composite
+// ════════════════════════════════════════
 function drawDish(ctx, dVid, W, H) {
-
-  // =========================
-  // DISH SIZE + POSITION
-  // =========================
-
-  const dishW = Math.round(W * 0.52);
+  // Dish size: 65% of screen width, square
+  const dishW = Math.round(W * 0.65);
   const dishH = dishW;
-
+  // Centered horizontally and vertically
   const dishX = Math.round((W - dishW) / 2);
+  const dishY = Math.round((H - dishH) / 2);
 
-  // Lower position = more realistic
-  const dishY = Math.round(H - dishH - H * 0.12);
-
-
-
-  // =========================
-  // NO BG REMOVAL MODE
-  // =========================
-
-  if (bgMode === 'none') {
-
-    // Soft table shadow
-    ctx.save();
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-      dishX + dishW / 2,
-      dishY + dishH * 0.88,
-      dishW * 0.28,
-      dishH * 0.06,
-      0,
-      0,
-      Math.PI * 2
-    );
-
-    ctx.fillStyle = 'rgba(0,0,0,0.30)';
-    ctx.filter = 'blur(12px)';
-    ctx.fill();
-
-    ctx.restore();
-
-    ctx.drawImage(dVid, dishX, dishY, dishW, dishH);
-
-    return;
-  }
-
-
-
-  // =========================
-  // OFFSCREEN CANVAS
-  // =========================
-
+  // Resize offscreen canvas if needed
   if (offCanvas.width !== dishW || offCanvas.height !== dishH) {
-    offCanvas.width = dishW;
+    offCanvas.width  = dishW;
     offCanvas.height = dishH;
   }
 
+  // Draw current dish video frame to offscreen canvas
   offCtx.clearRect(0, 0, dishW, dishH);
-
   offCtx.drawImage(dVid, 0, 0, dishW, dishH);
 
-
-
-  // =========================
-  // READ PIXELS
-  // =========================
-
+  // Read pixels — requires CORS to be configured on Cloudinary
   let imgData;
-
   try {
     imgData = offCtx.getImageData(0, 0, dishW, dishH);
-  } catch (e) {
-
-    // CORS fallback
+  } catch(e) {
+    // CORS blocked — draw without removal and show a hint
     ctx.drawImage(dVid, dishX, dishY, dishW, dishH);
-
     return;
   }
 
   const d = imgData.data;
+  const t = bgThresh;        // hard cutoff luminance
+  const s = softEdge;        // feather width
 
-  const t = bgThresh;
-  const soft = 35;
-
-
-
-  // =========================
-  // BACKGROUND REMOVAL
-  // =========================
-
+  // ── BLACK BACKGROUND REMOVAL ──
+  // Pixels darker than threshold become transparent.
+  // Pixels in the soft band get partial alpha for smooth edges.
   for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i+1], b = d[i+2];
 
-    const r = d[i];
-    const g = d[i + 1];
-    const b = d[i + 2];
+    // Perceived luminance (ITU-R BT.601)
+    const lum = r * 0.299 + g * 0.587 + b * 0.114;
 
-    let alpha = 255;
-
-
-
-    // -------------------------
-    // BLACK BG
-    // -------------------------
-
-    if (bgMode === 'black') {
-
-      const lum = r * 0.299 + g * 0.587 + b * 0.114;
-
-      if (lum < t) {
-
-        alpha = 0;
-
-      } else if (lum < t + soft) {
-
-        alpha = Math.round(
-          ((lum - t) / soft) * 255
-        );
-      }
+    let alpha;
+    if (lum <= t) {
+      // Fully transparent — this is the black background
+      alpha = 0;
+    } else if (lum <= t + s) {
+      // Soft feather zone — partial transparency for smooth edges
+      alpha = Math.round(((lum - t) / s) * 255);
+    } else {
+      // Fully opaque — this is the dish
+      alpha = 255;
     }
 
-
-
-    // -------------------------
-    // WHITE BG
-    // -------------------------
-
-    else if (bgMode === 'white') {
-
-      const lum = r * 0.299 + g * 0.587 + b * 0.114;
-
-      const inv = 255 - t;
-
-      if (lum > inv) {
-
-        alpha = 0;
-
-      } else if (lum > inv - soft) {
-
-        alpha = Math.round(
-          ((inv - lum) / soft) * 255
-        );
-      }
-    }
-
-
-
-    // -------------------------
-    // GREEN SCREEN
-    // -------------------------
-
-    else if (bgMode === 'green') {
-
-      const greenness = g - Math.max(r, b);
-
-      if (greenness > t) {
-
-        alpha = 0;
-
-      } else if (greenness > t - soft) {
-
-        alpha = Math.round(
-          ((t - greenness) / soft) * 255
-        );
-      }
-
-      // Despill green edges
-      if (alpha < 255) {
-
-        d[i + 1] = Math.round(
-          g * (alpha / 255) +
-          Math.min(r, b) * (1 - alpha / 255)
-        );
-      }
-    }
-
-
-
-    // Apply alpha
-    d[i + 3] = Math.min(d[i + 3], alpha);
+    d[i+3] = Math.min(d[i+3], alpha);
   }
-
-
-
-  // =========================
-  // PUT PIXELS BACK
-  // =========================
 
   offCtx.putImageData(imgData, 0, 0);
 
+  // Draw shadow under the dish for realism
+  drawShadow(ctx, dishX, dishY, dishW, dishH);
 
-
-
-  // =========================
-  // DRAW DISH WITH BLENDING
-  // =========================
-
+  // Composite dish onto camera feed — source-over = normal layering
   ctx.save();
-
-  ctx.globalAlpha = 0.98;
-
-  // Makes AR look more natural
-  ctx.globalCompositeOperation = 'screen';
-
-  ctx.drawImage(
-    offCanvas,
-    dishX,
-    dishY,
-    dishW,
-    dishH
-  );
-
+  ctx.globalAlpha = 1.0;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(offCanvas, dishX, dishY, dishW, dishH);
   ctx.restore();
 }
 
+// ════════════════════════════════════════
+//  SOFT ELLIPSE SHADOW UNDER DISH
+// ════════════════════════════════════════
 function drawShadow(ctx, dishX, dishY, dishW, dishH) {
-
   const cx = dishX + dishW / 2;
-
-  // Slightly higher shadow placement
-  const sy = dishY + dishH * 0.92;
-
-  // Wider softer shadow
-  const sw = dishW * 0.72;
-
-  // Taller blur
-  const sh = 30;
-
-  const grad = ctx.createRadialGradient(
-    cx,
-    sy,
-    0,
-    cx,
-    sy,
-    sw / 2
-  );
-
-  grad.addColorStop(0, 'rgba(0,0,0,0.38)');
-  grad.addColorStop(0.45, 'rgba(0,0,0,0.18)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  const cy = dishY + dishH * 0.9;  // near the bottom of dish
+  const rx = dishW * 0.32;
+  const ry = dishH * 0.06;
 
   ctx.save();
-
-  ctx.scale(1, sh / (sw / 2));
-
-  ctx.fillStyle = grad;
-
-  ctx.beginPath();
-
-  ctx.arc(
-    cx,
-    sy * (sw / 2) / sh,
-    sw / 2,
-    0,
-    Math.PI * 2
-  );
-
-  ctx.fill();
-
+  // Approximate blur with multiple ellipses at decreasing opacity
+  for (let i = 3; i >= 0; i--) {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx + i*6, ry + i*2, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,0,0,${0.10 - i*0.02})`;
+    ctx.fill();
+  }
   ctx.restore();
 }
 
 // ════════════════════════════════════════
-//  BG CONTROLS
+//  THRESHOLD CONTROL
 // ════════════════════════════════════════
-function setBG(mode) {
-  bgMode = mode;
-  document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('active'));
-  $('bgb-' + mode).classList.add('active');
-  $('threshRow').style.display = mode === 'none' ? 'none' : 'flex';
-}
-
 function onThresh(val) {
   bgThresh = parseInt(val);
   $('threshVal').textContent = val;
@@ -925,7 +688,6 @@ function onThresh(val) {
 // ════════════════════════════════════════
 //  DRAG TO SCRUB (rotate 360°)
 // ════════════════════════════════════════
-// Attach to the canvas (covers whole screen)
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = $('arMainCanvas');
   canvas.addEventListener('touchstart',  onDragStart, { passive: false });
@@ -938,7 +700,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function onDragStart(e) {
   if (!dishReady || !vidDuration) return;
-  isDragging = true; autoActive = false;
+  isDragging = true;
+  autoActive = false;
   hide('arHint');
   dragStartX = e.touches ? e.touches[0].clientX : e.clientX;
   dragStartT = $('arDishVideo').currentTime;
@@ -957,7 +720,7 @@ function onDragMove(e) {
 }
 function onDragEnd() {
   isDragging = false;
-  setTimeout(() => { if (!isDragging) autoActive = true; }, 1800);
+  // Do NOT resume autoActive — keep drag-only mode
 }
 
 // ════════════════════════════════════════
@@ -1012,10 +775,9 @@ function addItem() {
   const price = $('inp-price').value.trim();
   const desc  = $('inp-desc').value.trim();
   const vurl  = $('inp-videourl').value.trim();
-  const bgtype = document.querySelector('input[name="bgtype"]:checked')?.value || 'black';
   if (!name || !price) { alert('Name and price required.'); return; }
   const id   = 'i_' + Date.now();
-  const item = { id, name, price, desc, videoUrl: vurl, bgtype };
+  const item = { id, name, price, desc, videoUrl: vurl };
   if (videoBlobs['_p']) { videoBlobs[id] = videoBlobs['_p']; delete videoBlobs['_p']; }
   items.push(item);
   save();
@@ -1046,7 +808,7 @@ function renderItems() {
         ${videoBlobs[item.id]
           ? `<video src="${videoBlobs[item.id].url}" muted loop autoplay playsinline></video>`
           : item.videoUrl
-          ? `<div style="text-align:center;color:#1D9E75;font-size:12px;"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 6px;display:block"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>${item.bgtype ? item.bgtype+' bg' : 'Video ready'}</div>`
+          ? `<div style="text-align:center;color:#1D9E75;font-size:12px;padding:1rem;"><svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 6px;display:block"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>Video ready</div>`
           : `<div style="color:#ccc;font-size:12px;">No video</div>`
         }
       </div>
@@ -1065,14 +827,12 @@ function previewItem(id) {
   const item = items.find(i => i.id === id); if (!item) return;
   const vurl = item.videoUrl || (videoBlobs[id]?.url || '');
 
-  // Full reset
   if (camStream)  { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
   if (rafId)      { cancelAnimationFrame(rafId); rafId = null; }
   const dv = $('arDishVideo'); dv.pause(); dv.src = '';
   camReady = false; dishReady = false; autoActive = false; isDragging = false; vidDuration = 0;
 
-  const hideList = ['arHUD','arFooter','bgBar','threshRow','arHint','arError','arLoader'];
-  hideList.forEach(i => $(i).style.display = 'none');
+  ['arHUD','arFooter','threshRow','arHint','arError','arLoader'].forEach(i => $(i).style.display = 'none');
   $('arClose').style.display = 'none';
   $('arFlip').style.display  = 'none';
   $('scanLine').classList.remove('visible');
@@ -1080,7 +840,7 @@ function previewItem(id) {
 
   hide('managerPage');
   show('viewerPage');
-  initViewer({ name: item.name, price: item.price, desc: item.desc, v: vurl, bgtype: item.bgtype || 'black' });
+  initViewer({ name: item.name, price: item.price, desc: item.desc, v: vurl });
 }
 function save() {
   try { localStorage.setItem('menu360', JSON.stringify(items)); } catch(e){}
@@ -1091,7 +851,7 @@ function save() {
 // ════════════════════════════════════════
 function buildURL(item) {
   const base = 'https://krish-ai007.github.io/AR_MENU/menu360_system.html';
-  return base + '?' + new URLSearchParams({ view:'1', name: item.name, price: item.price, desc: item.desc||'', v: item.videoUrl||'', bgtype: item.bgtype||'black' });
+  return base + '?' + new URLSearchParams({ view:'1', name: item.name, price: item.price, desc: item.desc||'', v: item.videoUrl||'' });
 }
 function showQR(id) {
   const item = items.find(i => i.id === id); if (!item) return;
