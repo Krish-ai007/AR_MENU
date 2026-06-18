@@ -8,95 +8,55 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-<!-- ═══ FIREBASE — Fill in your config below ═══ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, getDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // ▼▼▼ PASTE YOUR FIREBASE CONFIG HERE ▼▼▼
   const firebaseConfig = {
-  apiKey: "AIzaSyCGr7agYZE6YCGjJOIma4hF7PZcYetFXLk",
-  authDomain: "augmented-appetites.firebaseapp.com",
-  projectId: "augmented-appetites",
-  storageBucket: "augmented-appetites.firebasestorage.app",
-  messagingSenderId: "744069952625",
-  appId: "1:744069952625:web:033f1087c8e4e355e357d0",
-  measurementId: "G-MVL952VZL5"
-};
-  // ▲▲▲ PASTE YOUR FIREBASE CONFIG ABOVE ▲▲▲
+    apiKey: "AIzaSyCGr7agYZE6YCGjJOIma4hF7PZcYetFXLk",
+    authDomain: "augmented-appetites.firebaseapp.com",
+    projectId: "augmented-appetites",
+    storageBucket: "augmented-appetites.firebasestorage.app",
+    messagingSenderId: "744069952625",
+    appId: "1:744069952625:web:033f1087c8e4e355e357d0"
+  };
 
   const fbApp = initializeApp(firebaseConfig);
   const db    = getFirestore(fbApp);
   window.__db = db;
 
-  // DB helpers exposed globally
-  window.dbSaveItem = async (restId, item) => {
-    await setDoc(doc(db, "restaurants", restId, "dishes", item.id), item);
-  };
-  window.dbDeleteItem = async (restId, itemId) => {
-    await deleteDoc(doc(db, "restaurants", restId, "dishes", itemId));
-  };
-  window.dbGetItems = async (restId) => {
-    const snap = await getDocs(collection(db, "restaurants", restId, "dishes"));
-    return snap.docs.map(d => d.data());
-  };
-  window.dbGetItem = async (restId, itemId) => {
-    const snap = await getDoc(doc(db, "restaurants", restId, "dishes", itemId));
-    return snap.exists() ? snap.data() : null;
-  };
-  window.dbSaveRestaurant = async (rest) => {
-    await setDoc(doc(db, "restaurants", rest.id), { id:rest.id, name:rest.name, address:rest.address||'', emoji:rest.emoji||'🍽️', accent:rest.accent||'#F5A623' });
-  };
-  window.dbDeleteRestaurant = async (restId) => {
-    await deleteDoc(doc(db, "restaurants", restId));
-  };
-  window.dbGetRestaurants = async () => {
-    const snap = await getDocs(collection(db, "restaurants"));
-    return snap.docs.map(d => d.data());
-  };
-
+  window.dbSaveItem = async (restId, item) => { await setDoc(doc(db,"restaurants",restId,"dishes",item.id), item); };
+  window.dbDeleteItem = async (restId, itemId) => { await deleteDoc(doc(db,"restaurants",restId,"dishes",itemId)); };
+  window.dbGetItems = async (restId) => { const s=await getDocs(collection(db,"restaurants",restId,"dishes")); return s.docs.map(d=>d.data()); };
+  window.dbGetItem = async (restId, itemId) => { const s=await getDoc(doc(db,"restaurants",restId,"dishes",itemId)); return s.exists()?s.data():null; };
+  window.dbSaveRestaurant = async (rest) => { await setDoc(doc(db,"restaurants",rest.id),{id:rest.id,name:rest.name,address:rest.address||'',emoji:rest.emoji||'🍽️',accent:rest.accent||'#F5A623'}); };
+  window.dbDeleteRestaurant = async (restId) => { await deleteDoc(doc(db,"restaurants",restId)); };
+  window.dbGetRestaurants = async () => { const s=await getDocs(collection(db,"restaurants")); return s.docs.map(d=>d.data()); };
   window.__firebaseReady = true;
   document.dispatchEvent(new Event('firebaseReady'));
 </script>
 
 <style>
-/* ══ TOKENS ══ */
 :root {
-  --void:       #0C0B0A;
-  --surface:    #161310;
-  --surface2:   #1E1B17;
-  --surface3:   #27231E;
-  --rim:        rgba(245,166,35,0.12);
-  --amber:      #F5A623;
-  --amber-dim:  #C17D0F;
-  --amber-glow: rgba(245,166,35,0.18);
-  --mint:       #00C896;
-  --cream:      #F0EBE3;
-  --cream-dim:  rgba(240,235,227,0.55);
-  --cream-faint:rgba(240,235,227,0.28);
-  --muted:      #6B5E52;
-  --danger:     #E05A3A;
-  --r-card:     18px;
-  --r-btn:      12px;
-  --r-pill:     50px;
-  --shadow:     0 8px 32px rgba(0,0,0,0.55),0 1px 0 rgba(255,255,255,0.04) inset;
-  --serif:      'Playfair Display',Georgia,serif;
-  --sans:       'Inter',system-ui,sans-serif;
-  --accent:     #F5A623;
-  --accent-dim: #C17D0F;
-  --accent-glow:rgba(245,166,35,0.18);
+  --void:#0C0B0A; --surface:#161310; --surface2:#1E1B17; --surface3:#27231E;
+  --rim:rgba(245,166,35,0.12); --amber:#F5A623; --amber-dim:#C17D0F;
+  --amber-glow:rgba(245,166,35,0.18); --mint:#00C896;
+  --cream:#F0EBE3; --cream-dim:rgba(240,235,227,0.55); --cream-faint:rgba(240,235,227,0.28);
+  --muted:#6B5E52; --danger:#E05A3A;
+  --r-card:18px; --r-btn:12px; --r-pill:50px;
+  --shadow:0 8px 32px rgba(0,0,0,0.55),0 1px 0 rgba(255,255,255,0.04) inset;
+  --serif:'Playfair Display',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+  --accent:#F5A623; --accent-dim:#C17D0F; --accent-glow:rgba(245,166,35,0.18);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
 body{font-family:var(--sans);background:var(--void);min-height:100vh;color:var(--cream);overflow-x:hidden;-webkit-font-smoothing:antialiased}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");background-size:180px 180px;opacity:.7}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");background-size:180px;opacity:.7}
 
-/* ══ MANAGER ══ */
 #managerPage{position:relative;z-index:1;max-width:540px;margin:0 auto;padding:0 0 80px;min-height:100vh}
-
 .app-hero{position:relative;padding:48px 20px 20px;overflow:hidden}
-.app-hero::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:380px;height:380px;border-radius:50%;background:radial-gradient(ellipse,rgba(245,166,35,.1) 0%,rgba(245,166,35,.03) 40%,transparent 70%);pointer-events:none;animation:heroBreath 6s ease-in-out infinite}
+.app-hero::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:380px;height:380px;border-radius:50%;background:radial-gradient(ellipse,rgba(245,166,35,.1) 0%,transparent 70%);pointer-events:none;animation:heroBreath 6s ease-in-out infinite}
 @keyframes heroBreath{0%,100%{transform:translateX(-50%) scale(1);opacity:.8}50%{transform:translateX(-50%) scale(1.1);opacity:1}}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:12px}
 .hero-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);animation:eyebrowPulse 2s ease-in-out infinite;box-shadow:0 0 8px var(--amber)}
@@ -105,7 +65,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .hero-title em{font-style:italic;background:linear-gradient(135deg,var(--amber) 0%,#FFCD6B 50%,var(--amber) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero-sub{font-size:13px;font-weight:300;color:var(--cream-faint);line-height:1.6;max-width:300px}
 
-/* DB status pill */
 #dbStatus{margin:8px 20px;padding:8px 14px;border-radius:10px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:8px}
 #dbStatus.ok{background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.25);color:var(--mint)}
 #dbStatus.err{background:rgba(224,90,58,.1);border:1px solid rgba(224,90,58,.25);color:var(--danger)}
@@ -115,7 +74,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .db-dot.err{background:var(--danger)}
 .db-dot.pulse{background:var(--amber);animation:eyebrowPulse 1s infinite}
 
-/* Active banner */
 #activeBanner{margin:4px 20px 6px;background:var(--surface);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden;transition:border-color .3s}
 #activeBanner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px}
 .banner-emoji{font-size:22px;flex-shrink:0}
@@ -128,7 +86,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 #noBanner p{font-size:13px;color:var(--amber);font-weight:500}
 #noBanner span{font-size:11px;color:var(--cream-faint);display:block;margin-top:3px}
 
-/* Nav */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:540px;background:rgba(18,15,12,.97);backdrop-filter:blur(28px) saturate(1.8);border-top:1px solid rgba(255,255,255,.07);display:flex;padding-bottom:env(safe-area-inset-bottom,0px);z-index:50}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px 10px;background:transparent;border:none;cursor:pointer;font-family:var(--sans);color:var(--muted);transition:color .2s;position:relative}
 .nav-btn svg{width:22px;height:22px;transition:transform .2s}
@@ -139,18 +96,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .nav-btn.active::before{width:32px}
 .nav-badge{position:absolute;top:8px;right:calc(50% - 18px);background:var(--amber);color:#000;font-size:8px;font-weight:800;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px}
 
-/* Panels */
 .panel{display:none;padding:0 20px;animation:fadePanel .25s ease}
 .panel.active{display:block}
 @keyframes fadePanel{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-/* Section header */
 .section-header{display:flex;align-items:center;justify-content:space-between;padding:20px 0 14px}
 .section-title{font-family:var(--serif);font-size:13px;font-weight:600;color:var(--amber);text-transform:uppercase;letter-spacing:.15em;display:flex;align-items:center;gap:10px}
 .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(245,166,35,.3),transparent)}
 .btn-add-small{background:linear-gradient(135deg,var(--amber),var(--amber-dim));color:#000;font-weight:700;font-size:11px;padding:8px 14px;border-radius:20px;border:none;cursor:pointer;font-family:var(--sans);white-space:nowrap;flex-shrink:0}
 
-/* Restaurant cards */
 .restaurant-list{display:flex;flex-direction:column;gap:12px}
 .rest-card{background:var(--surface);border:1px solid rgba(255,255,255,.06);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow);position:relative;transition:border-color .25s,transform .2s;cursor:pointer}
 .rest-card:active{transform:scale(.985)}
@@ -171,7 +124,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .rest-btn.del{flex:0 0 38px;min-width:38px;background:rgba(224,90,58,.08);border-color:rgba(224,90,58,.2);color:var(--danger)}
 .active-chip{position:absolute;top:14px;right:16px;background:rgba(0,200,150,.12);border:1px solid rgba(0,200,150,.25);color:var(--mint);font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.08em}
 
-/* Item grid */
 .item-grid{display:flex;flex-direction:column;gap:14px;padding-bottom:8px}
 .item-card{background:var(--surface);border:1px solid rgba(255,255,255,.06);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow);display:flex;position:relative;transition:border-color .25s,transform .25s}
 .item-card:active{transform:scale(.985)}
@@ -199,13 +151,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .item-action-btn.preview:active{filter:brightness(.9)}
 .item-action-btn.del{flex:0 0 36px;min-width:36px;background:rgba(224,90,58,.08);border-color:rgba(224,90,58,.2);color:var(--danger)}
 .item-badge{position:absolute;top:8px;left:8px;z-index:2;background:linear-gradient(135deg,var(--amber),var(--amber-dim));color:#000;font-size:8px;font-weight:800;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.08em}
-
 .empty-state{text-align:center;padding:50px 20px}
 .empty-icon{width:72px;height:72px;margin:0 auto 20px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;border:1px solid rgba(255,255,255,.06)}
 .empty-state h3{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--cream-dim);margin-bottom:8px}
 .empty-state p{font-size:13px;color:var(--cream-faint);line-height:1.6;font-weight:300}
 
-/* Add panel form */
 .form-section-title{font-family:var(--serif);font-size:13px;font-weight:600;color:var(--amber);text-transform:uppercase;letter-spacing:.15em;padding:20px 0 12px;display:flex;align-items:center;gap:10px}
 .form-section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(245,166,35,.3),transparent)}
 .form-group{margin-bottom:14px}
@@ -231,7 +181,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 #saveMsg{margin-top:14px;padding:13px 16px;background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.25);border-radius:12px;font-size:13px;color:var(--mint);font-weight:500;display:none}
 #noRestMsg{margin-top:20px;padding:16px;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.22);border-radius:14px;text-align:center;font-size:13px;color:var(--amber);font-weight:500;display:none}
 
-/* Guide */
 .step-list{display:flex;flex-direction:column;gap:0;padding:4px 0}
 .step-item{display:flex;gap:16px;padding:20px 0;border-bottom:1px solid rgba(255,255,255,.05);position:relative}
 .step-item:last-child{border-bottom:none}
@@ -247,7 +196,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 .tip-box.green{border-color:rgba(0,200,150,.2)}
 .tip-box.green .tip-box-title{color:var(--mint)}
 
-/* QR Modal */
 .qr-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.8);backdrop-filter:blur(16px);align-items:flex-end;justify-content:center}
 .qr-modal.open{display:flex;animation:qrIn .3s ease}
 @keyframes qrIn{from{opacity:0}to{opacity:1}}
@@ -261,7 +209,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 .qr-url{font-size:9px;color:var(--muted);word-break:break-all;margin-bottom:18px;background:var(--surface2);padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.05)}
 .qr-actions{display:flex;gap:8px;flex-direction:column}
 
-/* Restaurant Modal */
 #restModal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);backdrop-filter:blur(16px);align-items:flex-end;justify-content:center}
 #restModal.open{display:flex;animation:qrIn .3s ease}
 .rest-modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;border:1px solid rgba(255,255,255,.08);border-bottom:none;padding:12px 24px 40px;width:100%;max-width:540px;animation:sheetUp .35s cubic-bezier(.32,.72,0,1);max-height:90vh;overflow-y:auto}
@@ -274,23 +221,16 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 .ac-opt.sel::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .ac-opt.sel{border-color:rgba(255,255,255,.5);transform:scale(1.15)}
 
-/* ════════════════════════════════════════
-   AR VIEWER — Completely Rebuilt
-════════════════════════════════════════ */
+/* ════ AR VIEWER ════ */
 #viewerPage{display:none;position:fixed;inset:0;z-index:100;background:#000;overflow:hidden;font-family:var(--sans)}
 #arGLCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #arOverlayCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #arDishVideo,#camVideo{display:none;position:absolute;left:-9999px}
-
-/* Vignette */
 #arVignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 110% 40% at 50% 0%,rgba(0,0,0,.6) 0%,transparent 100%),radial-gradient(ellipse 110% 30% at 50% 100%,rgba(0,0,0,.8) 0%,transparent 100%)}
-
-/* Scan line */
 #scanLine{position:absolute;left:0;right:0;height:1px;pointer-events:none;opacity:0;background:linear-gradient(90deg,transparent,rgba(245,166,35,.85) 50%,transparent);animation:scanMove 5s ease-in-out infinite;transition:opacity 1s;box-shadow:0 0 14px rgba(245,166,35,.45)}
 #scanLine.visible{opacity:1}
 @keyframes scanMove{0%{top:8%}50%{top:80%}100%{top:8%}}
 
-/* Corner brackets */
 .ar-bracket{position:absolute;pointer-events:none;width:28px;height:28px;border-color:rgba(245,166,35,.8);border-style:solid;border-width:0;filter:drop-shadow(0 0 4px rgba(245,166,35,.5));opacity:0;transition:opacity .6s ease,transform .6s ease}
 .ar-bracket.tl{top:12%;left:6%;border-top-width:2px;border-left-width:2px;transform:translate(-8px,-8px)}
 .ar-bracket.tr{top:12%;right:6%;border-top-width:2px;border-right-width:2px;transform:translate(8px,-8px)}
@@ -298,97 +238,58 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 .ar-bracket.br{bottom:28%;right:6%;border-bottom-width:2px;border-right-width:2px;transform:translate(8px,8px)}
 .ar-bracket.show{opacity:1;transform:translate(0,0)}
 
-/* ── SURFACE DETECTION UI ── */
-#surfacePlane{
-  position:absolute;left:50%;bottom:26%;
-  transform:translateX(-50%);
-  width:70vw;max-width:320px;
-  height:25px;border-radius:50%;
-  border:1px solid rgba(0,200,150,.6);
-  pointer-events:none;display:none;
-  box-shadow:0 0 30px rgba(0,200,150,.2),inset 0 0 30px rgba(0,200,150,.05);
-  animation:planePulse 2s ease-in-out infinite;
-}
+/* Surface plane */
+#surfacePlane{position:absolute;left:50%;bottom:26%;transform:translateX(-50%);width:70vw;max-width:320px;height:25px;border-radius:50%;border:1px solid rgba(0,200,150,.6);pointer-events:none;display:none;box-shadow:0 0 30px rgba(0,200,150,.2),inset 0 0 30px rgba(0,200,150,.05);animation:planePulse 2s ease-in-out infinite}
 @keyframes planePulse{0%,100%{opacity:.6;transform:translateX(-50%) scaleX(1)}50%{opacity:1;transform:translateX(-50%) scaleX(1.05)}}
-#surfacePlaneLabel{
-  position:absolute;left:50%;bottom:23%;transform:translateX(-50%);
-  font-size:9px;color:var(--mint);font-weight:700;letter-spacing:.2em;text-transform:uppercase;
-  display:none;text-shadow:0 0 10px rgba(0,200,150,.8);white-space:nowrap;
-}
+#surfacePlaneLabel{position:absolute;left:50%;bottom:23%;transform:translateX(-50%);font-size:9px;color:var(--mint);font-weight:700;letter-spacing:.2em;text-transform:uppercase;display:none;text-shadow:0 0 10px rgba(0,200,150,.8);white-space:nowrap}
 
-/* Scanning animation */
+/* Surface scan */
 #surfaceScan{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:12;pointer-events:none;gap:20px}
 .scan-oval{width:200px;height:50px;border-radius:50%;border:1px solid rgba(0,200,150,.5);animation:scanOvalPulse 1.4s ease-in-out infinite;box-shadow:0 0 36px rgba(0,200,150,.1)}
 @keyframes scanOvalPulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.08);opacity:1}}
 .scan-line-v{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--mint),transparent);animation:scanSweep 1.4s ease-in-out infinite}
 @keyframes scanSweep{0%{top:5%;opacity:0}40%{opacity:1}100%{top:95%;opacity:0}}
-#surfaceScanText{color:var(--cream-faint);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+#surfaceScanText{color:var(--cream-faint);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:0 20px}
 
-/* Tilt indicator */
+/* Tilt indicator — FIXED: no inline display:none flex conflict */
 #tiltIndicator{
-  position:absolute;top:52px;left:50%;transform:translateX(-50%);
-  background:rgba(10,9,8,.75);backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,.1);
-  color:var(--cream);font-size:12px;
-  padding:10px 18px;border-radius:24px;
-  display:none;pointer-events:none;white-space:nowrap;
-  text-align:center;gap:8px;align-items:center;
+  position:absolute;bottom:220px;left:50%;transform:translateX(-50%);
+  background:rgba(10,9,8,.88);backdrop-filter:blur(20px);
+  border:1px solid rgba(0,200,150,.3);
+  color:var(--cream);font-size:12px;font-weight:500;
+  padding:12px 20px;border-radius:28px;
+  display:none; /* JS will set to flex when needed */
+  pointer-events:none;white-space:nowrap;
+  align-items:center;gap:10px;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
 }
-.tilt-bar-wrap{width:80px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle;margin:0 6px}
-.tilt-bar{height:100%;background:var(--mint);border-radius:2px;transition:width .15s;width:0%}
+.tilt-bar-wrap{width:70px;height:5px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden;display:inline-flex;flex-shrink:0}
+.tilt-bar{height:100%;background:var(--mint);border-radius:3px;transition:width .1s;width:0%}
+.tilt-icon{font-size:16px;flex-shrink:0}
 
-/* AR HUD — clean, minimal */
-#arHUD{
-  position:absolute;top:0;left:0;right:0;
-  padding:52px 18px 20px;
-  display:none;
-  background:linear-gradient(180deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.2) 70%,transparent 100%);
-  pointer-events:none;
-}
+/* HUD */
+#arHUD{position:absolute;top:0;left:0;right:0;padding:52px 18px 20px;display:none;background:linear-gradient(180deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.2) 70%,transparent 100%);pointer-events:none}
 #arRestLabel{font-size:9px;color:rgba(255,255,255,.45);font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px}
 #arItemName{font-family:var(--serif);font-size:clamp(24px,7vw,38px);font-weight:700;color:white;text-shadow:0 2px 20px rgba(0,0,0,.9);line-height:1.05;max-width:260px}
 .ar-live-pill{position:absolute;top:54px;right:18px;display:flex;align-items:center;gap:6px;background:rgba(10,9,8,.7);border:1px solid rgba(0,200,150,.3);color:var(--mint);font-size:10px;font-weight:700;padding:7px 12px;border-radius:20px;backdrop-filter:blur(16px);letter-spacing:.05em}
 .live-dot{width:6px;height:6px;background:var(--mint);border-radius:50%;animation:liveDot 1.5s ease-in-out infinite;box-shadow:0 0 6px var(--mint)}
 @keyframes liveDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.5)}}
 
-/* Rotation ring */
 #rotRing{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(58vw,240px);height:min(58vw,240px);border-radius:50%;border:1px solid rgba(245,166,35,.25);pointer-events:none;display:none;box-shadow:0 0 0 1px rgba(245,166,35,.06),inset 0 0 40px rgba(245,166,35,.03)}
 #rotDegree{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--serif);font-size:26px;font-weight:700;color:rgba(245,166,35,.9);letter-spacing:-.02em;text-shadow:0 0 20px rgba(245,166,35,.4);pointer-events:none}
 
-/* Drag hint */
 #arHint{position:absolute;left:50%;bottom:200px;transform:translateX(-50%);background:rgba(10,9,8,.78);backdrop-filter:blur(20px);color:var(--cream);font-size:13px;padding:12px 24px;border-radius:30px;border:1px solid rgba(255,255,255,.1);white-space:nowrap;animation:hintFloat 3s ease-in-out infinite;display:none;pointer-events:none}
 @keyframes hintFloat{0%,100%{transform:translateX(-50%) translateY(0);opacity:.9}50%{transform:translateX(-50%) translateY(-6px);opacity:1}}
 #pinchHint{position:absolute;left:50%;bottom:164px;transform:translateX(-50%);background:rgba(10,9,8,.6);backdrop-filter:blur(12px);color:var(--cream-faint);font-size:11px;padding:6px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.07);white-space:nowrap;display:none;pointer-events:none}
 
-/* ═══ DISH INFO SHEET — replaces old order UI ═══ */
-#arSheet{
-  position:absolute;bottom:0;left:0;right:0;
-  display:none;flex-direction:column;
-  /* No background here — handled by pill below */
-}
-
-/* Price row — slim */
-#arPriceRow{
-  padding:14px 20px 0;
-  background:linear-gradient(0deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 100%);
-  display:flex;align-items:baseline;gap:10px;
-}
+/* Info sheet — no order button */
+#arSheet{position:absolute;bottom:0;left:0;right:0;display:none;flex-direction:column}
+#arPriceRow{padding:14px 20px 0;display:flex;align-items:baseline;gap:10px}
 #arPrice{font-family:var(--serif);font-size:40px;font-weight:700;color:var(--amber);line-height:1}
 #arPriceLabel{font-size:12px;color:rgba(255,255,255,.35);font-weight:400}
-
-/* Info pill */
-#arInfoPill{
-  background:rgba(10,9,8,.94);
-  backdrop-filter:blur(40px) saturate(2);
-  border-top:1px solid rgba(255,255,255,.08);
-  border-radius:24px 24px 0 0;
-  padding-bottom:env(safe-area-inset-bottom,16px);
-  overflow:hidden;
-}
+#arInfoPill{background:rgba(10,9,8,.94);backdrop-filter:blur(40px) saturate(2);border-top:1px solid rgba(255,255,255,.08);border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom,16px);overflow:hidden}
 #arPillHandle{width:40px;height:3px;background:rgba(255,255,255,.18);border-radius:2px;margin:10px auto 0;cursor:pointer;transition:background .2s}
 #arPillHandle:hover{background:rgba(255,255,255,.3)}
-
-/* Collapsed strip */
 #arStrip{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 12px;cursor:pointer}
 .strip-left{display:flex;flex-direction:column;gap:6px}
 .strip-tags{display:flex;gap:6px;flex-wrap:wrap}
@@ -401,8 +302,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 .strip-rest{font-size:10px;color:rgba(255,255,255,.3);font-weight:500;letter-spacing:.03em}
 #stripChevron{font-size:13px;color:var(--muted);transition:transform .35s ease;flex-shrink:0}
 #stripChevron.up{transform:rotate(180deg)}
-
-/* Expanded */
 #arExpanded{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.32,.72,0,1)}
 #arExpanded.open{max-height:380px}
 #arExpandedInner{padding:2px 18px 16px}
@@ -413,15 +312,11 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 #expIngredients{display:flex;flex-wrap:wrap;gap:6px}
 #expIngredients span{background:var(--surface2);border:1px solid rgba(255,255,255,.07);color:var(--cream-dim);padding:4px 10px;border-radius:10px;font-size:11px}
 
-/* Close / flip */
 #arClose,#arFlip{position:absolute;width:42px;height:42px;border-radius:50%;background:rgba(10,9,8,.72);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);color:var(--cream);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:17px;transition:all .15s;box-shadow:0 4px 16px rgba(0,0,0,.5);pointer-events:all}
 #arClose{top:52px;right:16px}
 #arFlip{top:102px;right:16px;font-size:14px}
-
-/* Scale indicator */
 #scaleIndicator{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:rgba(10,9,8,.72);backdrop-filter:blur(12px);color:var(--amber);font-size:13px;font-weight:700;padding:6px 16px;border-radius:20px;border:1px solid rgba(245,166,35,.22);display:none;pointer-events:none;font-family:var(--serif)}
 
-/* Permission screen */
 #camPermScreen{position:absolute;inset:0;background:linear-gradient(180deg,#0C0B0A 0%,#161310 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem;text-align:center;z-index:20;overflow:hidden}
 #camPermScreen::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:500px;height:500px;border-radius:50%;background:radial-gradient(ellipse,rgba(245,166,35,.09) 0%,transparent 65%);pointer-events:none;animation:heroBreath 8s ease-in-out infinite}
 .perm-icon-wrap{width:90px;height:90px;border-radius:50%;background:radial-gradient(135deg,rgba(245,166,35,.15),rgba(245,166,35,.03));border:1px solid rgba(245,166,35,.2);display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:28px;box-shadow:0 0 40px rgba(245,166,35,.2)}
@@ -431,19 +326,12 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 #camPermBtn:active{transform:scale(.97)}
 #camSkipBtn{background:transparent;color:var(--muted);font-size:13px;padding:10px;border:none;cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:3px}
 
-/* Loader */
 #arLoader{position:absolute;inset:0;background:linear-gradient(180deg,#0C0B0A 0%,#161310 100%);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:15}
 #arLoader .ring{width:50px;height:50px;border:2px solid rgba(245,166,35,.15);border-top-color:var(--amber);border-radius:50%;animation:spin .85s linear infinite;box-shadow:0 0 20px rgba(245,166,35,.2)}
 #arLoader span{color:var(--cream-faint);font-size:13px;letter-spacing:.06em;font-weight:300}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* Error */
 #arError{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(224,90,58,.93);color:white;font-size:13px;padding:18px 22px;border-radius:16px;text-align:center;max-width:290px;line-height:1.65;z-index:30;backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1)}
-
-/* Entrance flash */
 #entranceFlash{position:absolute;inset:0;background:rgba(245,166,35,.04);pointer-events:none;opacity:0;z-index:5}
-
-/* Ambient glow below dish */
 #dishGlow{position:absolute;left:50%;transform:translateX(-50%);width:60vw;max-width:360px;height:20vw;max-height:100px;border-radius:50%;pointer-events:none;display:none;filter:blur(24px);animation:glowPulse 4s ease-in-out infinite;bottom:30%}
 @keyframes glowPulse{0%,100%{opacity:.6;transform:translateX(-50%) scaleX(1)}50%{opacity:.9;transform:translateX(-50%) scaleX(1.06)}}
 
@@ -454,9 +342,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 </head>
 <body>
 
-<!-- ══════════════════════════════
-     MANAGER PAGE
-══════════════════════════════ -->
 <div id="managerPage">
   <header class="app-hero">
     <div class="hero-eyebrow"><div class="hero-eyebrow-dot"></div>Multi-Restaurant AR</div>
@@ -477,7 +362,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
   </div>
   <div id="noBanner"><p>No restaurant selected</p><span>Go to Restaurants tab to add or select one</span></div>
 
-  <!-- PANELS -->
   <div id="panel-restaurants" class="panel active">
     <div class="section-header">
       <div class="section-title">Restaurants</div>
@@ -485,8 +369,7 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
     </div>
     <div id="restaurantList" class="restaurant-list"></div>
     <div id="restEmptyState" class="empty-state" style="display:none">
-      <div class="empty-icon">🏪</div>
-      <h3>No restaurants yet</h3>
+      <div class="empty-icon">🏪</div><h3>No restaurants yet</h3>
       <p>Tap <strong>+ Add</strong> to create your first restaurant.</p>
     </div>
   </div>
@@ -551,38 +434,21 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
   <div id="panel-howto" class="panel">
     <div class="form-section-title">Setup Guide</div>
     <div class="step-list">
-      <div class="step-item">
-        <div class="step-num-wrap"><div class="step-num">1</div><div class="step-line"></div></div>
-        <div class="step-content"><h4>Connect Firebase</h4><p>Create a free Firebase project → Firestore Database → open the HTML file, find the firebaseConfig section and paste your config. One time setup.</p></div>
-      </div>
-      <div class="step-item">
-        <div class="step-num-wrap"><div class="step-num">2</div><div class="step-line"></div></div>
-        <div class="step-content"><h4>Add restaurants</h4><p>Restaurants tab → + Add. Each restaurant is isolated — name, icon, colour, and its own dish list stored in Firestore.</p></div>
-      </div>
-      <div class="step-item">
-        <div class="step-num-wrap"><div class="step-num">3</div><div class="step-line"></div></div>
-        <div class="step-content"><h4>Film dishes on black</h4><p>Matte black cloth + turntable, rotate slowly 360° for 8-12 seconds. Upload to Cloudinary and paste the .mp4 URL.</p></div>
-      </div>
-      <div class="step-item">
-        <div class="step-num-wrap"><div class="step-num">4</div><div class="step-line"></div></div>
-        <div class="step-content"><h4>Save dish — gets DB entry</h4><p>Each dish is saved to Firestore. QR code links carry only the restaurant ID + dish ID — no video URL exposed. Customer scans → fetches from DB → sees dish in AR.</p></div>
-      </div>
-      <div class="step-item">
-        <div class="step-num-wrap"><div class="step-num">5</div></div>
-        <div class="step-content"><h4>Customer experience</h4><p>Scan QR → camera opens → tilt phone toward table → surface detected → dish appears on the table in AR. Drag to rotate 360°. Pinch to resize.</p></div>
-      </div>
+      <div class="step-item"><div class="step-num-wrap"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-content"><h4>Film on pure matte black</h4><p>Use <b>matte black cloth only</b> — no shiny surfaces. Light the dish from above and sides so no dark food areas appear black. The shader now uses max-channel detection so dark brown, red or green food is never erased — only true (0,0,0) black is removed.</p></div></div>
+      <div class="step-item"><div class="step-num-wrap"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-content"><h4>Surface detection flow</h4><p>Camera opens → tilt indicator appears at the bottom. Tilt your phone toward the table (about 50–70° from flat). The green bar fills up → dish loads automatically. Or just wait 5 seconds and it loads anyway.</p></div></div>
+      <div class="step-item"><div class="step-num-wrap"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-content"><h4>QR = restaurant + dish ID only</h4><p>QR codes carry only ?rid=…&iid=… — no video URL exposed. Customer scans → Firebase fetches dish → AR loads.</p></div></div>
+      <div class="step-item"><div class="step-num-wrap"><div class="step-num">4</div></div><div class="step-content"><h4>Drag to rotate, pinch to resize</h4><p>Once the dish appears, drag left/right to spin it 360°. Pinch to make it bigger or smaller on the table.</p></div></div>
     </div>
     <div class="tip-box">
-      <div class="tip-box-title">✦ Surface Detection</div>
-      <p>Customers see a "Tilt toward table" prompt. Using device gyroscope, when the phone is angled toward a flat surface the AR grid locks and the dish is placed on the detected plane — making it look like it's sitting on the actual table.</p>
+      <div class="tip-box-title">✦ Black Removal — How It Works Now</div>
+      <p>Previous version used <em>luminance</em> which treated dark brown/red food as black. Fixed version uses <em>max channel</em>: a pixel is only removed if ALL three color channels are near zero simultaneously. Dark burger patty (R:0.3, G:0.15, B:0.05) has maxC=0.3 → fully opaque. Pure black background (R:0.02, G:0.02, B:0.02) has maxC=0.02 → transparent. No more eating the food.</p>
     </div>
     <div class="tip-box green">
-      <div class="tip-box-title">⚡ Firebase Rules (Firestore)</div>
-      <p>Set rules to allow read for all, write only for authenticated users. Restaurant data → <code>restaurants/{id}</code>. Dishes → <code>restaurants/{id}/dishes/{dishId}</code>.</p>
+      <div class="tip-box-title">⚡ Shooting Tips for Clean Edges</div>
+      <p>Leave 5–8 cm gap between dish and cloth edge. Use two lights (45° left and right) to avoid shadows. Keep cloth completely flat and unwrinkled. Slightly overexpose the dish so it's brighter than the background.</p>
     </div>
   </div>
 
-  <!-- Bottom Nav -->
   <nav class="bottom-nav">
     <button class="nav-btn active" id="tab-restaurants" onclick="switchTab('restaurants')">
       <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -637,42 +503,34 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
   </div>
 </div>
 
-<!-- ══════════════════════════
-     AR VIEWER
-══════════════════════════ -->
+<!-- AR VIEWER -->
 <div id="viewerPage">
   <video id="camVideo" autoplay playsinline muted></video>
   <video id="arDishVideo" playsinline muted preload="auto" webkit-playsinline loop></video>
-
   <canvas id="arGLCanvas"></canvas>
   <canvas id="arOverlayCanvas"></canvas>
-
   <div id="dishGlow"></div>
   <div id="arVignette"></div>
   <div id="scanLine"></div>
   <div id="entranceFlash"></div>
-
   <div class="ar-bracket tl"></div><div class="ar-bracket tr"></div>
   <div class="ar-bracket bl"></div><div class="ar-bracket br"></div>
-
-  <!-- Surface detection -->
   <div id="surfacePlane"></div>
   <div id="surfacePlaneLabel">✦ Surface Detected</div>
+  <!-- Surface scan overlay -->
   <div id="surfaceScan">
     <div style="position:relative;width:200px;height:50px">
       <div class="scan-oval"></div>
       <div class="scan-line-v"></div>
     </div>
-    <div id="surfaceScanText">Point at table surface…</div>
+    <div id="surfaceScanText">Point camera at table…</div>
   </div>
-
-  <!-- Tilt guide -->
-  <div id="tiltIndicator" style="display:none flex">
-    📱 Tilt toward table &nbsp;
+  <!-- Tilt indicator - display handled entirely by JS -->
+  <div id="tiltIndicator">
+    <span class="tilt-icon">📱</span>
+    Tilt toward table
     <span class="tilt-bar-wrap"><span class="tilt-bar" id="tiltBar"></span></span>
   </div>
-
-  <!-- Permission -->
   <div id="camPermScreen">
     <div class="perm-icon-wrap">📷</div>
     <h2>See It On Your Table</h2>
@@ -680,23 +538,17 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
     <button id="camPermBtn" onclick="startCamera()">Allow Camera &amp; View in AR</button>
     <button id="camSkipBtn" onclick="skipCamera()">Skip — view without camera</button>
   </div>
-
   <div id="arLoader"><div class="ring"></div><span id="loaderMsg">Loading…</span></div>
   <div id="arError"></div>
-
   <div id="rotRing"><div id="rotDegree">0°</div></div>
   <div id="scaleIndicator">100%</div>
   <div id="arHint">← Drag to rotate 360° →</div>
   <div id="pinchHint">🤏 Pinch to resize</div>
-
-  <!-- HUD -->
   <div id="arHUD">
     <div id="arRestLabel"></div>
     <div id="arItemName"></div>
     <div class="ar-live-pill" style="display:flex"><div class="live-dot"></div>360° Live</div>
   </div>
-
-  <!-- Info sheet (no order button) -->
   <div id="arSheet">
     <div id="arPriceRow">
       <div id="arPrice"></div>
@@ -711,36 +563,27 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
         </div>
         <div id="stripChevron">▲</div>
       </div>
-      <div id="arExpanded">
-        <div id="arExpandedInner">
-          <div class="exp-divider"></div>
-          <div id="expName"></div>
-          <div id="expDesc"></div>
-          <div class="exp-section-label" id="expIngLabel" style="display:none">Ingredients</div>
-          <div id="expIngredients"></div>
-        </div>
-      </div>
+      <div id="arExpanded"><div id="arExpandedInner">
+        <div class="exp-divider"></div>
+        <div id="expName"></div><div id="expDesc"></div>
+        <div class="exp-section-label" id="expIngLabel" style="display:none">Ingredients</div>
+        <div id="expIngredients"></div>
+      </div></div>
     </div>
   </div>
-
   <button id="arClose" onclick="closeViewer()">✕</button>
   <button id="arFlip" onclick="flipCam()">⟳</button>
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════
-//  CONSTANTS
-// ════════════════════════════════════════════════════════
+// ═══ CONSTANTS ═══
 const EMOJIS=['🍽️','🍛','🍲','🥘','🫕','🍱','🍜','🥗','🍣','🍤','🥩','🍗','🍔','🌮','🍕','🧆','🥐','🍰','☕','🍹'];
 const ACCENTS=['#F5A623','#E05A3A','#00C896','#7C5CBF','#3B82F6','#EC4899','#EF4444','#10B981'];
 
-// ════════════════════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════════════════════
+// ═══ STATE ═══
 let restaurants=[],activeRestId=null,videoBlobs={},currentQRItem=null,currentQRUrl='';
 let editingRestId=null,selectedEmoji='🍽️',selectedAccent='#F5A623';
 let dbReady=false;
-// AR
 let camStream=null,facingMode='environment';
 let vidDuration=0,isDragging=false,dragStartX=0,dragStartT=0;
 let rafId=null,camReady=false,dishReady=false,currentParams=null;
@@ -751,44 +594,71 @@ let tfStartX=0,tfStartY=0,doStartX=0,doStartY=0;
 let entranceAnimating=false,entranceStart=0,lastFrameTime=0,particles=[];
 let useWebGL=false,dishTexValid=false,camTexValid=false;
 let dragFrozen=false,dragTargetTime=0,expandedOpen=false,scaleHideTimer=null;
-// Surface
-let deviceBeta=0,deviceGamma=0,surfaceLocked=false,surfaceLockTimer=null;
-let tiltProgress=0;
-// WebGL
+let surfaceLocked=false,surfaceLockTimer=null,autoLockTimer=null,tiltProgress=0;
 let gl=null,glProgram=null,camTexture=null,dishTexture=null,posBuffer=null,texBuffer=null;
 let uCamTex,uDishTex,uDishRect,uThreshold,uSoftness,uHasCam,uHasDish;
 
-// ════════════════════════════════════════════════════════
-//  WEBGL SHADERS
-// ════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+//  FIXED FRAGMENT SHADER
+//  OLD: luminance — dark food (brown patty, dark herbs) treated as black → ERASED
+//  NEW: max-channel — only removes pixels where ALL channels are near zero
+//       Dark brown = R:0.3 G:0.15 B:0.05 → maxC=0.30 → opaque (KEPT)
+//       Pure black bg = R:0.02 G:0.02 B:0.02 → maxC=0.02 → transparent (REMOVED)
+//  Also added color saturation guard: colored pixels (food) always survive
+// ═══════════════════════════════════════════════════════════════════
 const VS=`attribute vec2 a_pos;attribute vec2 a_tex;varying vec2 v_uv;void main(){v_uv=a_tex;gl_Position=vec4(a_pos,0.,1.);}`;
 const FS=`precision mediump float;
-varying vec2 v_uv;uniform sampler2D u_camTex,u_dishTex;uniform vec4 u_dishRect;uniform float u_threshold,u_softness;uniform bool u_hasCam,u_hasDish;
+varying vec2 v_uv;
+uniform sampler2D u_camTex,u_dishTex;
+uniform vec4 u_dishRect;
+uniform float u_threshold,u_softness;
+uniform bool u_hasCam,u_hasDish;
+
 void main(){
   vec4 bg;
-  if(u_hasCam){bg=texture2D(u_camTex,v_uv);}
-  else{float d=distance(v_uv,vec2(.5,.38));bg=mix(vec4(.09,.07,.03,1.),vec4(.015,.012,.010,1.),clamp(d*1.6,0.,1.));}
+  if(u_hasCam){
+    bg=texture2D(u_camTex,v_uv);
+  } else {
+    float d=distance(v_uv,vec2(.5,.38));
+    bg=mix(vec4(.09,.07,.03,1.),vec4(.015,.012,.010,1.),clamp(d*1.6,0.,1.));
+  }
   if(!u_hasDish){gl_FragColor=bg;return;}
+
   float rx=u_dishRect.x,ry=u_dishRect.y,rw=u_dishRect.z,rh=u_dishRect.w;
   if(v_uv.x<rx||v_uv.x>rx+rw||v_uv.y<ry||v_uv.y>ry+rh){gl_FragColor=bg;return;}
+
   vec2 uv=vec2((v_uv.x-rx)/rw,(v_uv.y-ry)/rh);
   vec4 dish=texture2D(u_dishTex,uv);
-  float lum=dot(dish.rgb,vec3(.299,.587,.114));
-  float a=smoothstep(u_threshold,u_threshold+u_softness,lum)*dish.a;
-  gl_FragColor=mix(bg,vec4(dish.rgb,1.),a);
+
+  /* ── MAX-CHANNEL BLACK DETECTION (the key fix) ──
+     Only pixels where ALL channels are near zero get removed.
+     Dark food colors always have at least one channel noticeably above 0. */
+  float maxC = max(dish.r, max(dish.g, dish.b));
+  float minC = min(dish.r, min(dish.g, dish.b));
+
+  /* Saturation guard: if pixel has strong color (is food, not black bg),
+     keep it regardless of overall darkness.
+     sat>0.2 AND maxC>0.08 = clearly a colored food pixel */
+  float sat = (maxC > 0.001) ? (maxC - minC) / maxC : 0.0;
+  float colorGuard = step(0.08, maxC) * step(0.15, sat);
+
+  /* Alpha: smoothly transparent for near-black, opaque for everything else */
+  float alpha = smoothstep(u_threshold, u_threshold + u_softness, maxC);
+
+  /* colorGuard overrides: force fully opaque if clearly colored food */
+  alpha = max(alpha, colorGuard);
+  alpha *= dish.a;
+
+  gl_FragColor = mix(bg, vec4(dish.rgb, 1.0), alpha);
 }`;
 
-// ════════════════════════════════════════════════════════
-//  FIREBASE INIT
-// ════════════════════════════════════════════════════════
+// ═══ FIREBASE ═══
 function waitForFirebase(cb){
   if(window.__firebaseReady){ dbReady=true; cb(); }
   else document.addEventListener('firebaseReady',()=>{ dbReady=true; cb(); });
 }
 
-// ════════════════════════════════════════════════════════
-//  HELPERS
-// ════════════════════════════════════════════════════════
+// ═══ HELPERS ═══
 function $(i){return document.getElementById(i)}
 function show(i){$(i).style.display='block'}
 function hide(i){$(i).style.display='none'}
@@ -807,35 +677,23 @@ function hexToRgb(hex){
   return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)].join(',');
 }
 
-// ════════════════════════════════════════════════════════
-//  ROUTE
-// ════════════════════════════════════════════════════════
+// ═══ ROUTE ═══
 window.addEventListener('DOMContentLoaded',()=>{
   const p=new URLSearchParams(location.search);
   if(p.get('view')==='1'){
     hide('managerPage'); show('viewerPage');
-    // Fetch from DB by restId + itemId
-    const restId=p.get('rid')||'';
-    const itemId=p.get('iid')||'';
+    const restId=p.get('rid')||'',itemId=p.get('iid')||'';
     waitForFirebase(async()=>{
-      if(restId && itemId && window.dbGetItem && window.dbGetRestaurants){
+      if(restId && itemId){
         try{
           setDbStatus('wait','Fetching dish…');
-          const [item, rests] = await Promise.all([
-            window.dbGetItem(restId, itemId),
-            window.dbGetRestaurants()
-          ]);
-          const rest = rests.find(r=>r.id===restId);
+          const [item,rests]=await Promise.all([window.dbGetItem(restId,itemId),window.dbGetRestaurants()]);
+          const rest=rests.find(r=>r.id===restId);
           if(item){
             setDbStatus('ok','Database connected');
-            initViewer({
-              name:item.name,price:item.price,desc:item.desc||'',
-              ingredients:item.ingredients||'',calories:item.calories||'',
-              tags:item.tags||'',v:item.videoUrl||'',
-              rname:rest?.name||'',accent:rest?.accent||'#F5A623'
-            });
+            initViewer({name:item.name,price:item.price,desc:item.desc||'',ingredients:item.ingredients||'',calories:item.calories||'',tags:item.tags||'',v:item.videoUrl||'',rname:rest?.name||'',accent:rest?.accent||'#F5A623'});
           } else { initViewerFromParams(p); }
-        }catch(e){ console.warn('DB fetch failed, falling back to URL params',e); initViewerFromParams(p); }
+        }catch(e){ console.warn('DB fail, using URL params',e); initViewerFromParams(p); }
       } else { initViewerFromParams(p); }
     });
   } else {
@@ -844,35 +702,26 @@ window.addEventListener('DOMContentLoaded',()=>{
     waitForFirebase(async()=>{
       try{
         setDbStatus('wait','Loading…');
-        restaurants = await window.dbGetRestaurants();
+        restaurants=await window.dbGetRestaurants();
         setDbStatus('ok','Database connected');
-      }catch(e){
-        setDbStatus('err','DB error — check Firebase config');
-        restaurants=[];
-      }
+      }catch(e){ setDbStatus('err','DB error — check Firebase config'); restaurants=[]; }
       if(activeRestId){ const r=restaurants.find(r=>r.id===activeRestId); if(r) applyAccent(r.accent); }
       renderAll();
       switchTab(activeRestId?'items':'restaurants');
     });
   }
 });
-
 function initViewerFromParams(p){
-  initViewer({name:p.get('name')||'',price:p.get('price')||'',desc:p.get('desc')||'',
-    ingredients:p.get('ingredients')||'',calories:p.get('calories')||'',
-    tags:p.get('tags')||'',v:p.get('v')||'',rname:p.get('rname')||'',accent:p.get('accent')||'#F5A623'});
+  initViewer({name:p.get('name')||'',price:p.get('price')||'',desc:p.get('desc')||'',ingredients:p.get('ingredients')||'',calories:p.get('calories')||'',tags:p.get('tags')||'',v:p.get('v')||'',rname:p.get('rname')||'',accent:p.get('accent')||'#F5A623'});
 }
-
-function setDbStatus(type, text){
-  const el=$('dbStatus'), dot=el.querySelector('.db-dot'), span=$('dbStatusText');
+function setDbStatus(type,text){
+  const el=$('dbStatus'),dot=el.querySelector('.db-dot'),span=$('dbStatusText');
   el.className=''; el.classList.add(type);
   dot.className='db-dot '+(type==='wait'?'pulse':type);
   span.textContent=text;
 }
 
-// ════════════════════════════════════════════════════════
-//  TABS
-// ════════════════════════════════════════════════════════
+// ═══ TABS ═══
 function switchTab(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -883,9 +732,7 @@ function switchTab(name){
   else if(name==='add') renderAddPanel();
   window.scrollTo({top:0,behavior:'smooth'});
 }
-
 function renderAll(){ updateBanner(); renderRestaurants(); }
-
 function updateBanner(){
   const r=getActiveRest();
   if(!r){ hide('activeBanner'); $('noBanner').style.display='block'; return; }
@@ -902,24 +749,15 @@ function updateBanner(){
   $('activeBanner').style.borderColor='rgba('+hexToRgb(r.accent)+',.35)';
   applyAccent(r.accent);
 }
-
 function getActiveRest(){ return restaurants.find(r=>r.id===activeRestId)||null; }
-
-// Item cache per session
 const _itemCache={};
 async function getItemsFromCache(rId){
   if(_itemCache[rId]) return _itemCache[rId];
-  try{
-    const items = await window.dbGetItems(rId);
-    _itemCache[rId]=items;
-    return items;
-  }catch(e){ return []; }
+  try{ const items=await window.dbGetItems(rId); _itemCache[rId]=items; return items; }catch(e){ return []; }
 }
 function invalidateCache(rId){ delete _itemCache[rId]; }
 
-// ════════════════════════════════════════════════════════
-//  RESTAURANTS
-// ════════════════════════════════════════════════════════
+// ═══ RESTAURANTS ═══
 function renderRestaurants(){
   const list=$('restaurantList'),empty=$('restEmptyState');
   if(!restaurants.length){ list.innerHTML=''; empty.style.display='block'; return; }
@@ -948,78 +786,55 @@ function renderRestaurants(){
       </div>
     </div>`;
   }).join('');
-  // Load dish counts asynchronously
   restaurants.forEach(r=>{ if(!_itemCache[r.id]) getItemsFromCache(r.id).then(()=>renderRestaurants()); });
 }
-
 async function selectRestaurant(id){
   activeRestId=id; localStorage.setItem('aa_active_rest',id);
   const r=restaurants.find(r=>r.id===id); if(r) applyAccent(r.accent);
-  await getItemsFromCache(id);
-  renderAll(); switchTab('items');
+  await getItemsFromCache(id); renderAll(); switchTab('items');
 }
-
 async function deleteRestaurant(id,e){
   e.stopPropagation();
   const r=restaurants.find(r=>r.id===id);
-  if(!confirm(`Delete "${r?.name}" and all its dishes? This cannot be undone.`)) return;
-  try{
-    await window.dbDeleteRestaurant(id);
-    restaurants=restaurants.filter(r=>r.id!==id);
-    invalidateCache(id);
-    if(activeRestId===id){ activeRestId=null; localStorage.removeItem('aa_active_rest'); }
-    renderAll();
-  }catch(e){ alert('Error deleting restaurant. Check console.'); }
+  if(!confirm(`Delete "${r?.name}" and all its dishes?`)) return;
+  try{ await window.dbDeleteRestaurant(id); restaurants=restaurants.filter(r=>r.id!==id); invalidateCache(id); if(activeRestId===id){ activeRestId=null; localStorage.removeItem('aa_active_rest'); } renderAll(); }
+  catch(e){ alert('Error deleting.'); }
 }
 
-// ════════════════════════════════════════════════════════
-//  RESTAURANT MODAL
-// ════════════════════════════════════════════════════════
+// ═══ RESTAURANT MODAL ═══
 function openRestModal(id){
-  editingRestId=id||null;
-  $('restModalTitle').textContent=id?'Edit Restaurant':'Add Restaurant';
+  editingRestId=id||null; $('restModalTitle').textContent=id?'Edit Restaurant':'Add Restaurant';
   const r=id?restaurants.find(r=>r.id===id):null;
   $('rm-name').value=r?.name||''; $('rm-address').value=r?.address||'';
   selectedEmoji=r?.emoji||'🍽️'; selectedAccent=r?.accent||'#F5A623';
-  buildEmojiGrid(); buildAccentGrid();
-  $('restModal').classList.add('open');
+  buildEmojiGrid(); buildAccentGrid(); $('restModal').classList.add('open');
 }
 function closeRestModal(){ $('restModal').classList.remove('open'); editingRestId=null; }
-function buildEmojiGrid(){
-  $('emojiGridModal').innerHTML=EMOJIS.map(e=>`<div class="emoji-opt-m ${e===selectedEmoji?'sel':''}" onclick="pickEmoji('${e}')">${e}</div>`).join('');
-}
+function buildEmojiGrid(){ $('emojiGridModal').innerHTML=EMOJIS.map(e=>`<div class="emoji-opt-m ${e===selectedEmoji?'sel':''}" onclick="pickEmoji('${e}')">${e}</div>`).join(''); }
 function pickEmoji(e){ selectedEmoji=e; buildEmojiGrid(); }
-function buildAccentGrid(){
-  $('accentRow').innerHTML=ACCENTS.map(a=>`<div class="ac-opt ${a===selectedAccent?'sel':''}" style="background:${a}" onclick="pickAccent('${a}')"></div>`).join('');
-}
+function buildAccentGrid(){ $('accentRow').innerHTML=ACCENTS.map(a=>`<div class="ac-opt ${a===selectedAccent?'sel':''}" style="background:${a}" onclick="pickAccent('${a}')"></div>`).join(''); }
 function pickAccent(a){ selectedAccent=a; buildAccentGrid(); }
-
 async function saveRestaurant(){
-  const name=$('rm-name').value.trim();
-  if(!name){ alert('Restaurant name is required.'); return; }
+  const name=$('rm-name').value.trim(); if(!name){ alert('Name required.'); return; }
   let rest;
   if(editingRestId){
     const idx=restaurants.findIndex(r=>r.id===editingRestId);
     rest={...restaurants[idx],name,address:$('rm-address').value.trim(),emoji:selectedEmoji,accent:selectedAccent};
-    restaurants[idx]=rest;
-    if(activeRestId===editingRestId) applyAccent(selectedAccent);
+    restaurants[idx]=rest; if(activeRestId===editingRestId) applyAccent(selectedAccent);
   } else {
     rest={id:'r_'+Date.now(),name,address:$('rm-address').value.trim(),emoji:selectedEmoji,accent:selectedAccent};
     restaurants.push(rest);
   }
-  try{ await window.dbSaveRestaurant(rest); } catch(e){ alert('Error saving. Check Firebase config.'); return; }
+  try{ await window.dbSaveRestaurant(rest); } catch(e){ alert('Error saving. Check Firebase.'); return; }
   closeRestModal(); renderAll();
 }
 
-// ════════════════════════════════════════════════════════
-//  ITEMS
-// ════════════════════════════════════════════════════════
+// ═══ ITEMS ═══
 function renderAddPanel(){
   const r=getActiveRest();
   if(!r){ $('noRestMsg').style.display='block'; $('addFormContent').style.display='none'; }
   else { $('noRestMsg').style.display='none'; $('addFormContent').style.display='block'; }
 }
-
 async function renderItems(){
   const r=getActiveRest();
   const grid=$('itemGrid'),empty=$('emptyState'),noRest=$('noRestMenuMsg');
@@ -1030,23 +845,11 @@ async function renderItems(){
   empty.style.display='none';
   grid.innerHTML=items.map(item=>{
     const tags=item.tags?item.tags.split(','):[];
-    const tagHtml=tags.map(t=>{
-      if(t==='veg') return'<span class="tag veg">🟢 Veg</span>';
-      if(t==='spicy') return'<span class="tag spicy">🌶 Spicy</span>';
-      if(t==='bestseller') return'<span class="tag star">⭐ Best</span>';
-      if(t==='new') return'<span class="tag new">✨ New</span>';
-      return'';
-    }).join('');
+    const tagHtml=tags.map(t=>{ if(t==='veg')return'<span class="tag veg">🟢 Veg</span>'; if(t==='spicy')return'<span class="tag spicy">🌶 Spicy</span>'; if(t==='bestseller')return'<span class="tag star">⭐ Best</span>'; if(t==='new')return'<span class="tag new">✨ New</span>'; return''; }).join('');
     return`<div class="item-card">
       ${tags.includes('bestseller')?'<div class="item-badge">⭐ Best Seller</div>':''}
-      <div class="item-thumb">
-        <div class="thumb-halo"></div>
-        ${videoBlobs[item.id]
-          ?`<video src="${videoBlobs[item.id].url}" muted loop autoplay playsinline></video>`
-          :item.videoUrl
-          ?`<div class="item-thumb-placeholder"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg><span>Video ready</span></div>`
-          :`<div class="item-thumb-placeholder"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>No video</span></div>`
-        }
+      <div class="item-thumb"><div class="thumb-halo"></div>
+        ${videoBlobs[item.id]?`<video src="${videoBlobs[item.id].url}" muted loop autoplay playsinline></video>`:item.videoUrl?`<div class="item-thumb-placeholder"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg><span>Video ready</span></div>`:`<div class="item-thumb-placeholder"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>No video</span></div>`}
       </div>
       <div class="item-body">
         <div class="item-name">${item.name}</div>
@@ -1062,13 +865,7 @@ async function renderItems(){
     </div>`;
   }).join('');
 }
-
-function previewVid(input){
-  const f=input.files[0]; if(!f) return;
-  videoBlobs['_p']={file:f,url:URL.createObjectURL(f)};
-  const v=$('videoPreview'); v.src=videoBlobs['_p'].url; v.style.display='block';
-}
-
+function previewVid(input){ const f=input.files[0]; if(!f)return; videoBlobs['_p']={file:f,url:URL.createObjectURL(f)}; const v=$('videoPreview'); v.src=videoBlobs['_p'].url; v.style.display='block'; }
 async function addItem(){
   const r=getActiveRest(); if(!r){ alert('Select a restaurant first.'); return; }
   const name=$('inp-name').value.trim(),price=$('inp-price').value.trim();
@@ -1077,61 +874,39 @@ async function addItem(){
   const id='i_'+Date.now();
   const item={id,name,price,desc:$('inp-desc').value.trim(),ingredients:$('inp-ingredients').value.trim(),calories:$('inp-calories').value.trim(),tags,videoUrl:$('inp-videourl').value.trim(),restaurantId:r.id};
   if(videoBlobs['_p']){ videoBlobs[id]=videoBlobs['_p']; delete videoBlobs['_p']; }
-  try{
-    await window.dbSaveItem(r.id, item);
-    invalidateCache(r.id);
-    const msg=$('saveMsg'); msg.style.display='block'; setTimeout(()=>msg.style.display='none',3000);
-    clearForm(); updateBanner();
-  }catch(e){ alert('Error saving dish. Check Firebase config.'); }
+  try{ await window.dbSaveItem(r.id,item); invalidateCache(r.id); const msg=$('saveMsg'); msg.style.display='block'; setTimeout(()=>msg.style.display='none',3000); clearForm(); updateBanner(); }
+  catch(e){ alert('Error saving dish.'); }
 }
-
 function clearForm(){
   ['inp-name','inp-price','inp-desc','inp-ingredients','inp-calories','inp-videourl'].forEach(i=>$(i).value='');
   ['veg','spicy','bestseller','new'].forEach(t=>$('tag-'+t).checked=false);
   $('inp-video').value=''; $('videoPreview').style.display='none'; delete videoBlobs['_p'];
 }
-
 async function deleteItem(id,e){
-  e.stopPropagation();
-  const r=getActiveRest(); if(!r) return;
-  if(!confirm('Remove this dish?')) return;
-  try{
-    await window.dbDeleteItem(r.id, id);
-    invalidateCache(r.id);
-    delete videoBlobs[id];
-    renderItems(); updateBanner();
-  }catch(e){ alert('Error deleting dish.'); }
+  e.stopPropagation(); const r=getActiveRest(); if(!r)return;
+  if(!confirm('Remove this dish?'))return;
+  try{ await window.dbDeleteItem(r.id,id); invalidateCache(r.id); delete videoBlobs[id]; renderItems(); updateBanner(); }
+  catch(e){ alert('Error deleting.'); }
 }
 
-// ════════════════════════════════════════════════════════
-//  QR
-// ════════════════════════════════════════════════════════
-function buildURL(item){
-  const r=getActiveRest();
-  const base=location.href.split('?')[0];
-  // Short URL — just restId + itemId. AR viewer fetches from DB.
-  return base+'?'+new URLSearchParams({view:'1',rid:r.id,iid:item.id});
-}
+// ═══ QR ═══
+function buildURL(item){ const r=getActiveRest(); const base=location.href.split('?')[0]; return base+'?'+new URLSearchParams({view:'1',rid:r.id,iid:item.id}); }
 async function showQR(id){
-  const r=getActiveRest(); if(!r) return;
+  const r=getActiveRest(); if(!r)return;
   const items=await getItemsFromCache(r.id);
-  const item=items.find(i=>i.id===id); if(!item) return;
-  currentQRItem=item;
-  $('qrRestLabel').textContent=(r.emoji||'')+'  '+r.name;
+  const item=items.find(i=>i.id===id); if(!item)return;
+  currentQRItem=item; $('qrRestLabel').textContent=(r.emoji||'')+'  '+r.name;
   $('qrItemName').textContent=item.name;
   $('qrItemSub').textContent=item.price+(item.desc?' · '+item.desc:'')+' — Scan for 360° AR';
-  const url=buildURL(item); currentQRUrl=url;
-  $('qrUrl').textContent=url;
+  const url=buildURL(item); currentQRUrl=url; $('qrUrl').textContent=url;
   QRCode.toCanvas($('qrCanvas'),url,{width:220,margin:2,color:{dark:'#000',light:'#fff'}});
   $('qrModal').classList.add('open');
 }
 function closeQR(){ $('qrModal').classList.remove('open'); }
-function downloadQR(){ const a=document.createElement('a');a.download=(currentQRItem?.name.replace(/\s+/g,'_')||'dish')+'_AR_QR.png';a.href=$('qrCanvas').toDataURL();a.click(); }
+function downloadQR(){ const a=document.createElement('a'); a.download=(currentQRItem?.name.replace(/\s+/g,'_')||'dish')+'_AR_QR.png'; a.href=$('qrCanvas').toDataURL(); a.click(); }
 function copyQRUrl(){ navigator.clipboard.writeText(currentQRUrl).then(()=>alert('Link copied!')).catch(()=>prompt('Copy:',currentQRUrl)); }
 
-// ════════════════════════════════════════════════════════
-//  AR VIEWER INIT
-// ════════════════════════════════════════════════════════
+// ═══ AR VIEWER ═══
 function initViewer(p){
   currentParams=p;
   if(p.accent) applyAccent(p.accent);
@@ -1141,10 +916,8 @@ function initViewer(p){
   $('expName').textContent=p.name||'';
   $('expDesc').textContent=p.desc||'';
   const ig=$('expIngredients');
-  if(p.ingredients){
-    $('expIngLabel').style.display='block';
-    ig.innerHTML=p.ingredients.split(',').map(s=>`<span>${s.trim()}</span>`).join('');
-  } else { $('expIngLabel').style.display='none'; ig.innerHTML=''; }
+  if(p.ingredients){ $('expIngLabel').style.display='block'; ig.innerHTML=p.ingredients.split(',').map(s=>`<span>${s.trim()}</span>`).join(''); }
+  else { $('expIngLabel').style.display='none'; ig.innerHTML=''; }
   const tags=p.tags?p.tags.split(','):[];
   const st=$('stripTags'); st.innerHTML='';
   if(tags.includes('veg')) st.innerHTML+='<span class="strip-tag veg">🟢 Veg</span>';
@@ -1153,14 +926,11 @@ function initViewer(p){
   if(tags.includes('new')) st.innerHTML+='<span class="strip-tag new">✨ New</span>';
   if(p.calories) st.innerHTML+=`<span class="strip-tag cal">🔥 ${p.calories} kcal</span>`;
   $('stripRest').textContent=p.rname||'';
-  // Dish glow uses accent colour
-  $('dishGlow').style.background=`radial-gradient(ellipse,${p.accent||'#F5A623'}28 0%,${p.accent||'#F5A623'}08 45%,transparent 70%)`;
+  $('dishGlow').style.background=`radial-gradient(ellipse,${p.accent||'#F5A623'}28 0%,transparent 70%)`;
   $('camPermScreen').style.display='flex';
 }
 
-// ════════════════════════════════════════════════════════
-//  CAMERA
-// ════════════════════════════════════════════════════════
+// ═══ CAMERA ═══
 async function startCamera(){
   hide('camPermScreen'); flexShow('arLoader'); $('loaderMsg').textContent='Starting camera…';
   try{
@@ -1172,92 +942,118 @@ async function startCamera(){
 }
 function skipCamera(){
   hide('camPermScreen'); camReady=false;
+  surfaceLocked=true;
   flexShow('arLoader'); $('loaderMsg').textContent='Loading dish…';
-  surfaceLocked=true; // Skip surface scan
   loadDishVideo();
 }
 async function flipCam(){
-  if(!camStream) return; camStream.getTracks().forEach(t=>t.stop());
+  if(!camStream)return; camStream.getTracks().forEach(t=>t.stop());
   facingMode=facingMode==='environment'?'user':'environment';
-  try{
-    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1280},height:{ideal:720}},audio:false});
-    $('camVideo').srcObject=camStream; await $('camVideo').play();
-  }catch(e){}
+  try{ camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1280},height:{ideal:720}},audio:false}); $('camVideo').srcObject=camStream; await $('camVideo').play(); }catch(e){}
 }
 
-// ════════════════════════════════════════════════════════
-//  SURFACE DETECTION via DeviceOrientation
-// ════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+//  SURFACE DETECTION — Fixed & Robust
+//  Strategy:
+//  1. Show scan UI + tilt bar immediately
+//  2. Listen to DeviceOrientation — fire lockSurface() when angle is good
+//  3. ALWAYS fire lockSurface() after 5 seconds as absolute fallback
+//     so no one gets stuck on the scan screen
+//  4. On devices with no gyro → lock after 2s
+// ═══════════════════════════════════════════════════════════════════
 function startDeviceOrientation(){
   if(!window.DeviceOrientationEvent){
-    // No gyro — auto-lock surface after 2s
-    setTimeout(()=>lockSurface(),2000);
+    // No gyro support → auto-lock after 2s
+    autoLockTimer=setTimeout(()=>lockSurface(),2000);
     return;
   }
-  // iOS 13+ requires permission
   if(typeof DeviceOrientationEvent.requestPermission==='function'){
-    DeviceOrientationEvent.requestPermission().then(state=>{
-      if(state==='granted') window.addEventListener('deviceorientation',onOrientation);
-      else setTimeout(()=>lockSurface(),2000);
-    }).catch(()=>setTimeout(()=>lockSurface(),2000));
+    // iOS 13+: request permission
+    DeviceOrientationEvent.requestPermission()
+      .then(state=>{
+        if(state==='granted'){
+          window.addEventListener('deviceorientation',onOrientation,{passive:true});
+        } else {
+          autoLockTimer=setTimeout(()=>lockSurface(),2000);
+        }
+      })
+      .catch(()=>{ autoLockTimer=setTimeout(()=>lockSurface(),2000); });
   } else {
-    window.addEventListener('deviceorientation',onOrientation);
+    // Android / other — no permission needed
+    window.addEventListener('deviceorientation',onOrientation,{passive:true});
   }
 }
 
 function onOrientation(e){
-  deviceBeta=e.beta||0;   // front-back tilt: 0=flat, 90=upright
-  deviceGamma=e.gamma||0; // left-right tilt
+  if(surfaceLocked) return;
 
-  // We want phone angled toward table: beta ~50–80° = good viewing angle
-  // 90° = portrait upright, 0° = flat
-  const targetBeta=65, rangeBeta=30;
-  const dist=Math.abs(deviceBeta-targetBeta);
-  const progress=Math.max(0,1-(dist/rangeBeta));
-  tiltProgress=progress;
+  // beta: front-back tilt. 0° = phone face-up flat on table. 90° = phone upright.
+  // When someone holds phone to look at table (like taking a photo of it), beta ≈ 30–75°
+  const beta = e.beta != null ? Math.abs(e.beta) : 90;
+
+  // Target: 45–70° = good "looking down at table" angle
+  // Score goes 0→1 as beta approaches 55°
+  const target = 55, range = 35;
+  const dist = Math.abs(beta - target);
+  const progress = Math.max(0, 1 - (dist / range));
+  tiltProgress = progress;
 
   // Update tilt bar
   const bar=$('tiltBar');
-  if(bar) bar.style.width=(progress*100)+'%';
+  if(bar) bar.style.width = Math.round(progress * 100) + '%';
 
-  if(!surfaceLocked && progress>0.75){
-    // Hold for 0.8s
+  if(progress > 0.6){
     if(!surfaceLockTimer){
-      surfaceLockTimer=setTimeout(()=>{
-        if(tiltProgress>0.75) lockSurface();
-      },800);
+      // Hold the sweet spot for 600ms then lock
+      surfaceLockTimer = setTimeout(()=>{
+        if(tiltProgress > 0.5) lockSurface();
+        else surfaceLockTimer = null;
+      }, 600);
     }
-  } else if(progress<=0.75 && surfaceLockTimer){
-    clearTimeout(surfaceLockTimer); surfaceLockTimer=null;
+  } else {
+    if(surfaceLockTimer){ clearTimeout(surfaceLockTimer); surfaceLockTimer=null; }
   }
 }
 
 function startSurfaceScan(){
+  // Hide loader, show scan UI
   hide('arLoader');
-  flexShow('surfaceScan');
-  // Show tilt indicator
-  flexShow('tiltIndicator');
+  $('surfaceScan').style.display='flex';
+  // Show tilt indicator — FIXED: set style.display directly
+  $('tiltIndicator').style.display='flex';
+
+  // Absolute fallback: always lock after 5s no matter what
+  autoLockTimer = setTimeout(()=>{ if(!surfaceLocked) lockSurface(); }, 5000);
 }
 
 function lockSurface(){
   if(surfaceLocked) return;
   surfaceLocked=true;
-  hide('surfaceScan');
-  hide('tiltIndicator');
+
+  // Clean up timers
+  if(surfaceLockTimer){ clearTimeout(surfaceLockTimer); surfaceLockTimer=null; }
+  if(autoLockTimer){ clearTimeout(autoLockTimer); autoLockTimer=null; }
+  window.removeEventListener('deviceorientation',onOrientation);
+
+  // Hide scan UI
+  $('surfaceScan').style.display='none';
+  $('tiltIndicator').style.display='none';
+
+  // Haptic feedback
   if(navigator.vibrate) navigator.vibrate([40,30,80]);
-  // Show plane
+
+  // Flash surface detected
   $('surfacePlane').style.display='block';
   $('surfacePlaneLabel').style.display='block';
   setTimeout(()=>{
     $('surfacePlane').style.display='none';
     $('surfacePlaneLabel').style.display='none';
-  },2500);
+  }, 2000);
+
   loadDishVideo();
 }
 
-// ════════════════════════════════════════════════════════
-//  LOAD VIDEO
-// ════════════════════════════════════════════════════════
+// ═══ LOAD VIDEO ═══
 function loadDishVideo(){
   const vid=$('arDishVideo'),p=currentParams;
   if(!p.v){ hide('arLoader'); showError('No video URL for this item.'); return; }
@@ -1265,29 +1061,26 @@ function loadDishVideo(){
   vid.setAttribute('crossorigin','anonymous'); vid.loop=true; vid.src=p.v;
   vid.onloadedmetadata=()=>{ vidDuration=vid.duration||10; };
   vid.oncanplay=()=>{
-    if(dishReady) return; dishReady=true; hide('arLoader');
+    if(dishReady)return; dishReady=true; hide('arLoader');
     resizeAllCanvas(); useWebGL=initWebGL();
-    showARControls();
-    vid.play().catch(e=>console.warn(e));
+    showARControls(); vid.play().catch(e=>console.warn(e));
     startRenderLoop(); triggerEntrance(); spawnParticles();
   };
   vid.onerror=()=>{ hide('arLoader'); showError('Could not load video. Check Cloudinary URL & CORS.'); };
   vid.load();
 }
 
-// ════════════════════════════════════════════════════════
-//  WEBGL
-// ════════════════════════════════════════════════════════
+// ═══ WEBGL INIT ═══
 function initWebGL(){
   const c=$('arGLCanvas');
   gl=c.getContext('webgl',{alpha:false,antialias:false,powerPreference:'high-performance'})||c.getContext('experimental-webgl',{alpha:false});
-  if(!gl) return false;
-  const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;};
+  if(!gl)return false;
+  const mk=(t,s)=>{ const sh=gl.createShader(t); gl.shaderSource(sh,s); gl.compileShader(sh); return sh; };
   glProgram=gl.createProgram();
   gl.attachShader(glProgram,mk(gl.VERTEX_SHADER,VS));
   gl.attachShader(glProgram,mk(gl.FRAGMENT_SHADER,FS));
   gl.linkProgram(glProgram);
-  if(!gl.getProgramParameter(glProgram,gl.LINK_STATUS)) return false;
+  if(!gl.getProgramParameter(glProgram,gl.LINK_STATUS))return false;
   gl.useProgram(glProgram);
   posBuffer=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,posBuffer); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
   texBuffer=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,texBuffer); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,1,1,1,0,0,1,0]),gl.STATIC_DRAW);
@@ -1299,7 +1092,9 @@ function initWebGL(){
   uSoftness=gl.getUniformLocation(glProgram,'u_softness'); uHasCam=gl.getUniformLocation(glProgram,'u_hasCam'); uHasDish=gl.getUniformLocation(glProgram,'u_hasDish');
   camTexture=mkTex(); dishTexture=mkTex();
   gl.uniform1i(uCamTex,0); gl.uniform1i(uDishTex,1);
-  gl.uniform1f(uThreshold,0.12); gl.uniform1f(uSoftness,0.18);
+  // FIXED thresholds — tighter black detection, preserve dark food
+  gl.uniform1f(uThreshold,0.07);   // was 0.12 — only remove very pure blacks
+  gl.uniform1f(uSoftness,0.10);    // was 0.18 — sharper edge at background boundary
   return true;
 }
 function mkTex(){
@@ -1309,16 +1104,12 @@ function mkTex(){
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   return t;
 }
-function upTex(t,v){gl.bindTexture(gl.TEXTURE_2D,t);try{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,v);}catch(e){}}
+function upTex(t,v){ gl.bindTexture(gl.TEXTURE_2D,t); try{ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,v); }catch(e){} }
 
-// ════════════════════════════════════════════════════════
-//  SHOW AR CONTROLS
-// ════════════════════════════════════════════════════════
+// ═══ AR CONTROLS ═══
 function showARControls(){
   flexShow('arHUD'); flexShow('arSheet'); $('arClose').style.display='flex'; $('arFlip').style.display='flex';
-  show('arHint'); show('pinchHint');
-  $('dishGlow').style.display='block';
-  $('scanLine').classList.add('visible');
+  show('arHint'); show('pinchHint'); $('dishGlow').style.display='block'; $('scanLine').classList.add('visible');
   setTimeout(()=>document.querySelectorAll('.ar-bracket').forEach(b=>b.classList.add('show')),400);
   window.addEventListener('resize',resizeAllCanvas);
   const c=$('arGLCanvas');
@@ -1330,16 +1121,13 @@ function showARControls(){
   window.addEventListener('mouseup',onDragEnd);
   setTimeout(()=>{ hide('arHint'); hide('pinchHint'); },5500);
 }
-
 function resizeAllCanvas(){
   const W=window.innerWidth,H=window.innerHeight;
   $('arGLCanvas').width=W; $('arGLCanvas').height=H; if(gl) gl.viewport(0,0,W,H);
   $('arOverlayCanvas').width=W; $('arOverlayCanvas').height=H;
 }
 
-// ════════════════════════════════════════════════════════
-//  ENTRANCE
-// ════════════════════════════════════════════════════════
+// ═══ ENTRANCE ═══
 function triggerEntrance(){
   entranceAnimating=true; entranceStart=performance.now();
   if(navigator.vibrate) navigator.vibrate([20,40,80]);
@@ -1347,28 +1135,24 @@ function triggerEntrance(){
   setTimeout(()=>{ f.style.transition='opacity .7s'; f.style.opacity='0'; },150);
 }
 function getEntranceScale(now){
-  if(!entranceAnimating) return 1;
+  if(!entranceAnimating)return 1;
   const t=Math.min((now-entranceStart)/800,1);
   const s=t<.55?(t/.55)*1.08:1.08-((t-.55)/.45)*.08;
   if(t>=1){ entranceAnimating=false; return 1; }
   return Math.max(.01,s*t);
 }
 
-// ════════════════════════════════════════════════════════
-//  PARTICLES (steam)
-// ════════════════════════════════════════════════════════
+// ═══ PARTICLES ═══
 function spawnParticles(){ particles=[]; for(let i=0;i<18;i++) particles.push(newP(true)); }
 function newP(r){ return{x:0,y:0,vx:(Math.random()-.5)*.6,vy:-(Math.random()*1.2+.3),life:r?Math.random():0,maxLife:1+Math.random()*1.2,size:Math.random()*5+2,opacity:Math.random()*.3+.06}; }
 
-// ════════════════════════════════════════════════════════
-//  RENDER LOOP — now with surface tilt perspective
-// ════════════════════════════════════════════════════════
+// ═══ RENDER LOOP ═══
 function startRenderLoop(){
   if(rafId) cancelAnimationFrame(rafId);
   function frame(now){
     rafId=requestAnimationFrame(frame);
-    if(now-lastFrameTime<28) return; lastFrameTime=now;
-    if(!useWebGL||!gl||!dishReady) return;
+    if(now-lastFrameTime<28)return; lastFrameTime=now;
+    if(!useWebGL||!gl||!dishReady)return;
     const c=$('arGLCanvas'),W=c.width,H=c.height;
     const cv=$('camVideo'),dv=$('arDishVideo');
     if(camReady&&cv.readyState>=2){ gl.activeTexture(gl.TEXTURE0); upTex(camTexture,cv); camTexValid=true; }
@@ -1376,57 +1160,41 @@ function startRenderLoop(){
     if(!dragFrozen&&dv.readyState>=2){ gl.activeTexture(gl.TEXTURE1); upTex(dishTexture,dv); dishTexValid=true; }
     gl.uniform1i(uHasDish,dishTexValid?1:0);
     const eS=getEntranceScale(now);
-    // Surface tilt: shift dish down a bit on the "table"
     const tiltOffsetY=surfaceLocked ? H*.04 : 0;
     const base=W*.66,dW=base*dishScale*eS,dH=dW;
     const dX=(W-dW)/2+dishOffsetX, dY=(H-dH)/2+dishOffsetY+tiltOffsetY;
     gl.uniform4f(uDishRect,dX/W,dY/H,dW/W,dH/H);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-    // Overlay
-    drawOverlay(W,H,dX,dY,dW,dH,now);
+    drawOverlay(W,H,dX,dY,dW,dH);
   }
   rafId=requestAnimationFrame(frame);
 }
 
-function drawOverlay(W,H,dx,dy,dw,dh,now){
+function drawOverlay(W,H,dx,dy,dw,dh){
   const ctx=$('arOverlayCanvas').getContext('2d'); ctx.clearRect(0,0,W,H);
-
-  // Surface AR grid (when locked)
+  // AR surface grid when locked
   if(surfaceLocked){
-    const gx=dx+dw/2, gy=dy+dh*.9;
-    const gw=dw*1.3, gh=dw*.3;
-    ctx.save();
-    ctx.translate(gx,gy);
-    // Elliptical grid lines
+    const gx=dx+dw/2, gy=dy+dh*.9, gw=dw*1.3, gh=dw*.28;
+    ctx.save(); ctx.translate(gx,gy);
     const accent=currentParams?.accent||'#F5A623';
-    const r=parseInt(accent.slice(1,3),16),g=parseInt(accent.slice(3,5),16),b=parseInt(accent.slice(5,7),16);
+    const rc=parseInt(accent.slice(1,3),16),gc=parseInt(accent.slice(3,5),16),bc=parseInt(accent.slice(5,7),16);
     for(let i=1;i<=3;i++){
-      const scale=i/3;
-      ctx.beginPath();
-      ctx.ellipse(0,0,gw*.5*scale,gh*.5*scale,0,0,Math.PI*2);
-      ctx.strokeStyle=`rgba(${r},${g},${b},${.18*(1-scale*.4)})`;
-      ctx.lineWidth=1;
-      ctx.stroke();
+      const sc=i/3;
+      ctx.beginPath(); ctx.ellipse(0,0,gw*.5*sc,gh*.5*sc,0,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${rc},${gc},${bc},${.2*(1-sc*.3)})`; ctx.lineWidth=1; ctx.stroke();
     }
-    // Radial lines
     for(let a=0;a<Math.PI*2;a+=Math.PI/4){
-      ctx.beginPath();
-      ctx.moveTo(0,0);
-      ctx.lineTo(Math.cos(a)*gw*.5,Math.sin(a)*gh*.5);
-      ctx.strokeStyle=`rgba(${r},${g},${b},.08)`;
-      ctx.lineWidth=1;
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*gw*.5,Math.sin(a)*gh*.5);
+      ctx.strokeStyle=`rgba(${rc},${gc},${bc},.07)`; ctx.lineWidth=1; ctx.stroke();
     }
     ctx.restore();
   }
-
-  // Shadow under dish
+  // Shadow
   const cx=dx+dw/2, cy=dy+dh*.94;
   const sg=ctx.createRadialGradient(cx,cy,0,cx,cy,dw*.4);
   sg.addColorStop(0,'rgba(0,0,0,.45)'); sg.addColorStop(.5,'rgba(0,0,0,.18)'); sg.addColorStop(1,'rgba(0,0,0,0)');
   ctx.save(); ctx.scale(1,.16); ctx.beginPath(); ctx.arc(cx,cy/.16,dw*.4,0,Math.PI*2); ctx.fillStyle=sg; ctx.fill(); ctx.restore();
-
-  // Steam particles
+  // Steam
   const tx=dx+dw/2,ty=dy+dh*.1;
   particles.forEach(p=>{
     p.life+=.012;
@@ -1438,17 +1206,13 @@ function drawOverlay(W,H,dx,dy,dw,dh,now){
   });
 }
 
-// ════════════════════════════════════════════════════════
-//  TOUCH / DRAG
-// ════════════════════════════════════════════════════════
+// ═══ TOUCH / DRAG ═══
 function onTouchStart(e){
   if(e.touches.length===2){
     isPinching=true; isDragging=false;
     pinchStartDist=getTD(e.touches); pinchStartScale=dishScale;
-    tfStartX=(e.touches[0].clientX+e.touches[1].clientX)/2;
-    tfStartY=(e.touches[0].clientY+e.touches[1].clientY)/2;
-    doStartX=dishOffsetX; doStartY=dishOffsetY;
-    e.preventDefault(); return;
+    tfStartX=(e.touches[0].clientX+e.touches[1].clientX)/2; tfStartY=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    doStartX=dishOffsetX; doStartY=dishOffsetY; e.preventDefault(); return;
   }
   isPinching=false; onDragStart(e);
 }
@@ -1460,24 +1224,22 @@ function onTouchMove(e){
     dishOffsetX=doStartX+(mx-tfStartX); dishOffsetY=doStartY+(my-tfStartY);
     const pct=Math.round(dishScale*100);
     $('scaleIndicator').textContent=pct+'%'; $('scaleIndicator').style.display='block';
-    clearTimeout(scaleHideTimer); scaleHideTimer=setTimeout(()=>$('scaleIndicator').style.display='none',1200);
-    return;
+    clearTimeout(scaleHideTimer); scaleHideTimer=setTimeout(()=>$('scaleIndicator').style.display='none',1200); return;
   }
-  if(isPinching) return; onDragMove(e);
+  if(isPinching)return; onDragMove(e);
 }
 function onTouchEnd(e){ if(e.touches.length<2) isPinching=false; onDragEnd(); }
 function getTD(t){ const dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY; return Math.sqrt(dx*dx+dy*dy); }
 function onDragStart(e){
-  if(!dishReady||!vidDuration||isPinching) return;
+  if(!dishReady||!vidDuration||isPinching)return;
   isDragging=true; dragFrozen=true; hide('arHint');
   dragStartX=e.touches?e.touches[0].clientX:e.clientX;
   dragStartT=$('arDishVideo').currentTime; dragTargetTime=dragStartT;
-  $('arDishVideo').pause();
-  $('rotRing').style.display='block'; $('rotDegree').textContent='0°';
+  $('arDishVideo').pause(); $('rotRing').style.display='block'; $('rotDegree').textContent='0°';
   e.preventDefault();
 }
 function onDragMove(e){
-  if(!isDragging||!vidDuration||isPinching) return; e.preventDefault();
+  if(!isDragging||!vidDuration||isPinching)return; e.preventDefault();
   const x=e.touches?e.touches[0].clientX:e.clientX;
   const dx=x-dragStartX;
   let t=dragStartT-(dx/280)*vidDuration;
@@ -1491,65 +1253,22 @@ function onDragEnd(){
   const rr=$('rotRing'); rr.style.transition='opacity .4s'; rr.style.opacity='0';
   setTimeout(()=>{ rr.style.display='none'; rr.style.opacity='1'; rr.style.transition=''; },400);
 }
-
-// ════════════════════════════════════════════════════════
-//  INFO SHEET
-// ════════════════════════════════════════════════════════
 function toggleExpanded(){
   expandedOpen=!expandedOpen;
   $('arExpanded').classList.toggle('open',expandedOpen);
   $('stripChevron').classList.toggle('up',expandedOpen);
 }
 
-// ════════════════════════════════════════════════════════
-//  CLOSE / RESET
-// ════════════════════════════════════════════════════════
+// ═══ CLOSE ═══
 function closeViewer(){
   if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
   if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
-  if(surfaceScanTimer) clearTimeout(surfaceScanTimer);
-  if(surfaceLockTimer) clearTimeout(surfaceLockTimer);
+  if(surfaceLockTimer){ clearTimeout(surfaceLockTimer); surfaceLockTimer=null; }
+  if(autoLockTimer){ clearTimeout(autoLockTimer); autoLockTimer=null; }
   window.removeEventListener('deviceorientation',onOrientation);
   const dv=$('arDishVideo'); dv.pause(); dv.src='';
   camReady=false; dishReady=false; isDragging=false; vidDuration=0;
-  surfaceDetected=false; surfaceLocked=false; surfaceLockTimer=null; tiltProgress=0;
-  dishScale=1; dishOffsetX=0; dishOffsetY=0; particles=[];
-  useWebGL=false; dishTexValid=false; camTexValid=false; dragFrozen=false; expandedOpen=false;
-  if(gl){ gl=null; glProgram=null; camTexture=null; dishTexture=null; }
-  document.querySelectorAll('.ar-bracket').forEach(b=>b.classList.remove('show'));
-  $('arExpanded').classList.remove('open'); $('stripChevron').classList.remove('up');
-  $('dishGlow').style.display='none';
-  $('rotRing').style.display='none'; $('scaleIndicator').style.display='none';
-  $('scanLine').classList.remove('visible');
-  $('surfacePlane').style.display='none'; $('surfacePlaneLabel').style.display='none';
-  $('tiltIndicator').style.display='none';
-  ['arHUD','arSheet','arHint','pinchHint','arError','arLoader','surfaceScan'].forEach(i=>{ const el=$(i); if(el) el.style.display='none'; });
-  $('arClose').style.display='none'; $('arFlip').style.display='none';
-  hide('viewerPage'); show('managerPage');
-  history.replaceState({},'',location.pathname);
-  const r=getActiveRest(); if(r) applyAccent(r.accent);
-  renderItems();
-}
-
-function previewItem(id){
-  getItemsFromCache(activeRestId||'').then(items=>{
-    const r=getActiveRest(); if(!r) return;
-    const item=items.find(i=>i.id===id); if(!item) return;
-    const vurl=item.videoUrl||(videoBlobs[id]?.url||'');
-    resetAR(); hide('managerPage'); show('viewerPage');
-    initViewer({name:item.name,price:item.price,desc:item.desc||'',ingredients:item.ingredients||'',calories:item.calories||'',tags:item.tags||'',v:vurl,rname:r.name,accent:r.accent});
-  });
-}
-
-function resetAR(){
-  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
-  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
-  if(surfaceScanTimer) clearTimeout(surfaceScanTimer);
-  if(surfaceLockTimer) clearTimeout(surfaceLockTimer);
-  window.removeEventListener('deviceorientation',onOrientation);
-  const dv=$('arDishVideo'); dv.pause(); dv.src='';
-  camReady=false; dishReady=false; isDragging=false; vidDuration=0;
-  surfaceDetected=false; surfaceLocked=false; surfaceLockTimer=null; tiltProgress=0;
+  surfaceDetected=false; surfaceLocked=false; surfaceLockTimer=null; autoLockTimer=null; tiltProgress=0;
   dishScale=1; dishOffsetX=0; dishOffsetY=0; particles=[];
   useWebGL=false; dishTexValid=false; camTexValid=false; dragFrozen=false; expandedOpen=false;
   if(gl){ gl=null; glProgram=null; camTexture=null; dishTexture=null; }
@@ -1558,12 +1277,45 @@ function resetAR(){
   $('dishGlow').style.display='none'; $('rotRing').style.display='none'; $('scaleIndicator').style.display='none';
   $('scanLine').classList.remove('visible');
   $('surfacePlane').style.display='none'; $('surfacePlaneLabel').style.display='none';
-  $('tiltIndicator').style.display='none';
-  ['arHUD','arSheet','arHint','pinchHint','arError','arLoader','surfaceScan'].forEach(i=>{ const el=$(i); if(el) el.style.display='none'; });
+  $('surfaceScan').style.display='none'; $('tiltIndicator').style.display='none';
+  ['arHUD','arSheet','arHint','pinchHint','arError','arLoader'].forEach(i=>{ const el=$(i); if(el) el.style.display='none'; });
+  $('arClose').style.display='none'; $('arFlip').style.display='none';
+  hide('viewerPage'); show('managerPage');
+  history.replaceState({},'',location.pathname);
+  const r=getActiveRest(); if(r) applyAccent(r.accent);
+  renderItems();
+}
+function previewItem(id){
+  getItemsFromCache(activeRestId||'').then(items=>{
+    const r=getActiveRest(); if(!r)return;
+    const item=items.find(i=>i.id===id); if(!item)return;
+    const vurl=item.videoUrl||(videoBlobs[id]?.url||'');
+    resetAR(); hide('managerPage'); show('viewerPage');
+    initViewer({name:item.name,price:item.price,desc:item.desc||'',ingredients:item.ingredients||'',calories:item.calories||'',tags:item.tags||'',v:vurl,rname:r.name,accent:r.accent});
+  });
+}
+function resetAR(){
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  if(surfaceLockTimer){ clearTimeout(surfaceLockTimer); surfaceLockTimer=null; }
+  if(autoLockTimer){ clearTimeout(autoLockTimer); autoLockTimer=null; }
+  window.removeEventListener('deviceorientation',onOrientation);
+  const dv=$('arDishVideo'); dv.pause(); dv.src='';
+  camReady=false; dishReady=false; isDragging=false; vidDuration=0;
+  surfaceDetected=false; surfaceLocked=false; surfaceLockTimer=null; autoLockTimer=null; tiltProgress=0;
+  dishScale=1; dishOffsetX=0; dishOffsetY=0; particles=[];
+  useWebGL=false; dishTexValid=false; camTexValid=false; dragFrozen=false; expandedOpen=false;
+  if(gl){ gl=null; glProgram=null; camTexture=null; dishTexture=null; }
+  document.querySelectorAll('.ar-bracket').forEach(b=>b.classList.remove('show'));
+  $('arExpanded').classList.remove('open'); $('stripChevron').classList.remove('up');
+  $('dishGlow').style.display='none'; $('rotRing').style.display='none'; $('scaleIndicator').style.display='none';
+  $('scanLine').classList.remove('visible');
+  $('surfacePlane').style.display='none'; $('surfacePlaneLabel').style.display='none';
+  $('surfaceScan').style.display='none'; $('tiltIndicator').style.display='none';
+  ['arHUD','arSheet','arHint','pinchHint','arError','arLoader'].forEach(i=>{ const el=$(i); if(el) el.style.display='none'; });
   $('arClose').style.display='none'; $('arFlip').style.display='none';
   $('camPermScreen').style.display='flex';
 }
-
 function showError(msg){
   const el=$('arError');
   el.innerHTML='⚠️ '+msg+'<br><br><button onclick="this.parentElement.style.display=\'none\'" style="background:white;color:#a00;border:none;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;">Dismiss</button>';
