@@ -279,30 +279,10 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 .tilt-icon{font-size:16px;flex-shrink:0}
 
 /* ── AR HUD — centred, full-width ── */
-#arHUD{position:absolute;top:0;left:0;right:0;padding:52px 18px 20px;display:none;background:linear-gradient(180deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.3) 70%,transparent 100%);pointer-events:none;text-align:center}
-#arRestLabel{
-  font-size:11px;
-  color:var(--amber);
-  font-weight:800;
-  letter-spacing:.22em;
-  text-transform:uppercase;
-  margin-bottom:6px;
-  text-shadow:0 0 18px rgba(245,166,35,.75),0 1px 4px rgba(0,0,0,.95);
-  display:block;
-}
-/* ── Dish name: centred, no truncation ── */
-#arItemName{
-  font-family:var(--serif);
-  font-size:clamp(26px,8vw,42px);
-  font-weight:700;
-  color:white;
-  text-shadow:0 2px 24px rgba(0,0,0,.95),0 0 40px rgba(0,0,0,.7);
-  line-height:1.05;
-  max-width:92vw;
-  margin:0 auto;
-  display:block;
-}
-.ar-live-pill{position:absolute;top:54px;right:18px;display:flex;align-items:center;gap:6px;background:rgba(10,9,8,.7);border:1px solid rgba(0,200,150,.3);color:var(--mint);font-size:10px;font-weight:700;padding:7px 12px;border-radius:20px;backdrop-filter:blur(16px);letter-spacing:.05em}
+#arHUD{position:absolute;top:0;left:0;right:0;padding:52px 18px 20px;display:none;background:linear-gradient(180deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.2) 70%,transparent 100%);pointer-events:none}
+#arRestLabel{font-size:9px;color:rgba(255,255,255,.45);font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px}
+#arItemName{font-family:var(--serif);font-size:clamp(22px,6.5vw,36px);font-weight:700;color:white;text-shadow:0 2px 20px rgba(0,0,0,.9);line-height:1.1;width:calc(100% - 36px);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.ar-live-pill{position:absolute;top:100px;right:18px;display:flex;align-items:center;gap:6px;background:rgba(10,9,8,.7);border:1px solid rgba(0,200,150,.3);color:var(--mint);font-size:10px;font-weight:700;padding:7px 12px;border-radius:20px;backdrop-filter:blur(16px);letter-spacing:.05em}
 .live-dot{width:6px;height:6px;background:var(--mint);border-radius:50%;animation:liveDot 1.5s ease-in-out infinite;box-shadow:0 0 6px var(--mint)}
 @keyframes liveDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.5)}}
 #rotRing{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(58vw,240px);height:min(58vw,240px);border-radius:50%;border:1px solid rgba(245,166,35,.25);pointer-events:none;display:none;box-shadow:0 0 0 1px rgba(245,166,35,.06),inset 0 0 40px rgba(245,166,35,.03)}
@@ -362,7 +342,7 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 
 #arClose,#arFlip{position:absolute;width:42px;height:42px;border-radius:50%;background:rgba(10,9,8,.72);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);color:var(--cream);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:17px;transition:all .15s;box-shadow:0 4px 16px rgba(0,0,0,.5);pointer-events:all}
 #arClose{top:52px;right:16px}
-#arFlip{top:102px;right:16px;font-size:14px}
+#arFlip{top:152px;right:16px;font-size:14px}
 #scaleIndicator{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:rgba(10,9,8,.72);backdrop-filter:blur(12px);color:var(--amber);font-size:13px;font-weight:700;padding:6px 16px;border-radius:20px;border:1px solid rgba(245,166,35,.22);display:none;pointer-events:none;font-family:var(--serif)}
 #camPermScreen{position:absolute;inset:0;background:linear-gradient(180deg,#0C0B0A 0%,#161310 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem;text-align:center;z-index:20;overflow:hidden}
 #camPermScreen::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:500px;height:500px;border-radius:50%;background:radial-gradient(ellipse,rgba(245,166,35,.09) 0%,transparent 65%);pointer-events:none;animation:heroBreath 8s ease-in-out infinite}
