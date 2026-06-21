@@ -7,10 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-
-<!-- ═══ ML: TensorFlow.js + MiDaS Depth Estimation ═══
-     Loads once (~15MB), cached by browser after first visit.
-     Lazy-loaded only when the AR viewer opens, not on the manager page. -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/depth-estimation@0.0.3/dist/depth-estimation.min.js"></script>
 
@@ -229,7 +225,7 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 .ac-opt.sel::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .ac-opt.sel{border-color:rgba(255,255,255,.5);transform:scale(1.15)}
 
-/* ═══ ML STATUS BANNER — NEW ═══ */
+/* ═══ ML STATUS BANNER ═══ */
 #mlStatusBanner{
   position:absolute;top:108px;left:50%;transform:translateX(-50%);
   background:rgba(10,9,8,.9);backdrop-filter:blur(20px);
@@ -245,7 +241,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 .ml-dot.ready{background:var(--mint);box-shadow:0 0 6px var(--mint);animation:none}
 .ml-dot.err{background:var(--danger);animation:none}
 
-/* ═══ DEPTH DEBUG OVERLAY — NEW (visible only with ?debug=1) ═══ */
 #depthDebugCanvas{
   position:absolute;top:148px;right:12px;
   width:128px;height:96px;border-radius:10px;
@@ -282,9 +277,31 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 .tilt-bar-wrap{width:70px;height:5px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden;display:inline-flex;flex-shrink:0}
 .tilt-bar{height:100%;background:var(--mint);border-radius:3px;transition:width .1s;width:0%}
 .tilt-icon{font-size:16px;flex-shrink:0}
-#arHUD{position:absolute;top:0;left:0;right:0;padding:52px 18px 20px;display:none;background:linear-gradient(180deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.2) 70%,transparent 100%);pointer-events:none}
-#arRestLabel{font-size:9px;color:rgba(255,255,255,.45);font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px}
-#arItemName{font-family:var(--serif);font-size:clamp(24px,7vw,38px);font-weight:700;color:white;text-shadow:0 2px 20px rgba(0,0,0,.9);line-height:1.05;max-width:260px}
+
+/* ── AR HUD — centred, full-width ── */
+#arHUD{position:absolute;top:0;left:0;right:0;padding:52px 18px 20px;display:none;background:linear-gradient(180deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.3) 70%,transparent 100%);pointer-events:none;text-align:center}
+#arRestLabel{
+  font-size:11px;
+  color:var(--amber);
+  font-weight:800;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+  text-shadow:0 0 18px rgba(245,166,35,.75),0 1px 4px rgba(0,0,0,.95);
+  display:block;
+}
+/* ── Dish name: centred, no truncation ── */
+#arItemName{
+  font-family:var(--serif);
+  font-size:clamp(26px,8vw,42px);
+  font-weight:700;
+  color:white;
+  text-shadow:0 2px 24px rgba(0,0,0,.95),0 0 40px rgba(0,0,0,.7);
+  line-height:1.05;
+  max-width:92vw;
+  margin:0 auto;
+  display:block;
+}
 .ar-live-pill{position:absolute;top:54px;right:18px;display:flex;align-items:center;gap:6px;background:rgba(10,9,8,.7);border:1px solid rgba(0,200,150,.3);color:var(--mint);font-size:10px;font-weight:700;padding:7px 12px;border-radius:20px;backdrop-filter:blur(16px);letter-spacing:.05em}
 .live-dot{width:6px;height:6px;background:var(--mint);border-radius:50%;animation:liveDot 1.5s ease-in-out infinite;box-shadow:0 0 6px var(--mint)}
 @keyframes liveDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.5)}}
@@ -295,32 +312,54 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 #pinchHint{position:absolute;left:50%;bottom:164px;transform:translateX(-50%);background:rgba(10,9,8,.6);backdrop-filter:blur(12px);color:var(--cream-faint);font-size:11px;padding:6px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.07);white-space:nowrap;display:none;pointer-events:none}
 #arSheet{position:absolute;bottom:0;left:0;right:0;display:none;flex-direction:column}
 #arPriceRow{padding:14px 20px 0;display:flex;align-items:baseline;gap:10px}
-#arPrice{font-family:var(--serif);font-size:40px;font-weight:700;color:var(--amber);line-height:1}
-#arPriceLabel{font-size:12px;color:rgba(255,255,255,.35);font-weight:400}
-#arInfoPill{background:rgba(10,9,8,.94);backdrop-filter:blur(40px) saturate(2);border-top:1px solid rgba(255,255,255,.08);border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom,16px);overflow:hidden}
+#arPrice{font-family:var(--serif);font-size:44px;font-weight:700;color:var(--amber);line-height:1;text-shadow:0 0 20px rgba(245,166,35,.4)}
+#arPriceLabel{font-size:12px;color:rgba(255,255,255,.4);font-weight:400}
+
+/* ── Info pill — darker for readability ── */
+#arInfoPill{background:rgba(10,9,8,.97);backdrop-filter:blur(40px) saturate(2);border-top:1px solid rgba(245,166,35,.2);border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom,16px);overflow:hidden}
 #arPillHandle{width:40px;height:3px;background:rgba(255,255,255,.18);border-radius:2px;margin:10px auto 0;cursor:pointer;transition:background .2s}
 #arPillHandle:hover{background:rgba(255,255,255,.3)}
 #arStrip{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 12px;cursor:pointer}
 .strip-left{display:flex;flex-direction:column;gap:6px}
 .strip-tags{display:flex;gap:6px;flex-wrap:wrap}
-.strip-tag{font-size:10px;padding:3px 9px;border-radius:10px;font-weight:600}
-.strip-tag.veg{background:rgba(0,200,150,.12);color:var(--mint);border:1px solid rgba(0,200,150,.22)}
-.strip-tag.spicy{background:rgba(224,90,58,.12);color:#F87171;border:1px solid rgba(224,90,58,.22)}
-.strip-tag.bestseller{background:var(--amber-glow);color:var(--amber);border:1px solid var(--rim)}
-.strip-tag.new{background:rgba(129,140,248,.12);color:#A5B4FC;border:1px solid rgba(129,140,248,.2)}
-.strip-tag.cal{background:var(--surface2);color:var(--cream-faint);border:1px solid rgba(255,255,255,.07)}
-.strip-rest{font-size:10px;color:rgba(255,255,255,.3);font-weight:500;letter-spacing:.03em}
+
+/* ── Strip tags — bigger and bolder ── */
+.strip-tag{font-size:11px;padding:5px 12px;border-radius:10px;font-weight:700;letter-spacing:.02em}
+.strip-tag.veg{background:rgba(0,200,150,.18);color:#00E8AC;border:1px solid rgba(0,200,150,.35)}
+.strip-tag.spicy{background:rgba(224,90,58,.18);color:#FF8A70;border:1px solid rgba(224,90,58,.35)}
+.strip-tag.bestseller{background:rgba(245,166,35,.18);color:var(--amber);border:1px solid rgba(245,166,35,.35)}
+.strip-tag.new{background:rgba(129,140,248,.18);color:#B4C0FF;border:1px solid rgba(129,140,248,.35)}
+
+/* ── Restaurant name in strip — visible ── */
+.strip-rest{font-size:11px;color:rgba(255,255,255,.55);font-weight:600;letter-spacing:.04em}
 #stripChevron{font-size:13px;color:var(--muted);transition:transform .35s ease;flex-shrink:0}
 #stripChevron.up{transform:rotate(180deg)}
 #arExpanded{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.32,.72,0,1)}
-#arExpanded.open{max-height:380px}
-#arExpandedInner{padding:2px 18px 16px}
-.exp-divider{height:1px;background:rgba(255,255,255,.07);margin-bottom:14px}
-#expName{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--cream);margin-bottom:6px}
-#expDesc{font-size:13px;color:var(--cream-faint);line-height:1.65;margin-bottom:12px;font-weight:300}
-.exp-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px}
-#expIngredients{display:flex;flex-wrap:wrap;gap:6px}
-#expIngredients span{background:var(--surface2);border:1px solid rgba(255,255,255,.07);color:var(--cream-dim);padding:4px 10px;border-radius:10px;font-size:11px}
+#arExpanded.open{max-height:420px}
+#arExpandedInner{padding:4px 18px 20px}
+.exp-divider{height:1px;background:rgba(245,166,35,.15);margin-bottom:16px}
+
+/* ── Expanded dish name ── */
+#expName{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--cream);margin-bottom:8px;line-height:1.2}
+
+/* ── Description ── */
+#expDesc{font-size:14px;color:rgba(240,235,227,0.85);line-height:1.7;margin-bottom:16px;font-weight:400}
+
+/* ── Ingredients label ── */
+.exp-section-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--amber);margin-bottom:10px;display:block}
+
+/* ── Ingredient chips — amber-tinted, clearly visible ── */
+#expIngredients{display:flex;flex-wrap:wrap;gap:8px}
+#expIngredients span{
+  background:rgba(245,166,35,.12);
+  border:1px solid rgba(245,166,35,.3);
+  color:var(--cream);
+  padding:6px 13px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:500;
+}
+
 #arClose,#arFlip{position:absolute;width:42px;height:42px;border-radius:50%;background:rgba(10,9,8,.72);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);color:var(--cream);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:17px;transition:all .15s;box-shadow:0 4px 16px rgba(0,0,0,.5);pointer-events:all}
 #arClose{top:52px;right:16px}
 #arFlip{top:102px;right:16px;font-size:14px}
@@ -402,7 +441,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
       <div class="form-group"><label>Description</label><input type="text" id="inp-desc" placeholder="Short appetising description"/></div>
       <div class="form-row">
         <div class="form-group"><label>Ingredients</label><input type="text" id="inp-ingredients" placeholder="Paneer, Cream, Spices"/></div>
-        <div class="form-group" style="max-width:120px"><label>Calories</label><input type="number" id="inp-calories" placeholder="380"/></div>
       </div>
       <div class="form-group">
         <label>Tags</label>
@@ -439,13 +477,13 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
     <div class="form-section-title">Setup Guide</div>
     <div class="step-list">
       <div class="step-item"><div class="step-num-wrap"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-content"><h4>Film on pure matte black</h4><p>Use <b>matte black cloth only</b>. Light from above and both sides. The max-channel shader only removes true black — dark food (brown patty, red sauce, dark herbs) is never erased.</p></div></div>
-      <div class="step-item"><div class="step-num-wrap"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-content"><h4>ML surface detection (MiDaS)</h4><p>On camera start, the MiDaS depth model loads once (~15 MB, browser-cached). It scans the bottom 40% of the camera frame 4× per second, finds the flattest horizontal region (the table), and anchors the dish there — no manual tilt needed. The tilt bar and 5-second timer still run as fallbacks.</p></div></div>
+      <div class="step-item"><div class="step-num-wrap"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-content"><h4>ML surface detection (MiDaS)</h4><p>On camera start, the MiDaS depth model loads once (~15 MB, browser-cached). It scans the bottom 40% of the camera frame 4× per second, finds the flattest horizontal region (the table), and anchors the dish there — no manual tilt needed.</p></div></div>
       <div class="step-item"><div class="step-num-wrap"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-content"><h4>QR codes carry only IDs</h4><p>?rid=…&amp;iid=… only. No video URL exposed. Firebase fetches the dish on the customer's device.</p></div></div>
       <div class="step-item"><div class="step-num-wrap"><div class="step-num">4</div></div><div class="step-content"><h4>Drag to rotate · Pinch to resize</h4><p>Once the dish appears, drag left/right for 360° spin. Pinch to scale. Add <b>?debug=1</b> to the URL to see the live depth heatmap overlay during testing.</p></div></div>
     </div>
     <div class="tip-box blue">
       <div class="tip-box-title">🧠 How MiDaS Works Here</div>
-      <p>MiDaS (Mixed-Data Supervised) is a monocular depth model — it estimates distance for every pixel from a single camera image. The integration runs it on a 320×240 downscaled frame, scans rows in the bottom 40% for the one with the lowest depth variance (flattest = table surface), smoothly lerps the dish Y position toward that row, and locks after 3 consecutive confident readings. The model is then disposed to free GPU memory.</p>
+      <p>MiDaS (Mixed-Data Supervised) is a monocular depth model — it estimates distance for every pixel from a single camera image. The integration runs it on a 320×240 downscaled frame, scans rows in the bottom 40% for the one with the lowest depth variance (flattest = table surface), smoothly lerps the dish Y position toward that row, and locks after 3 consecutive confident readings.</p>
     </div>
     <div class="tip-box green">
       <div class="tip-box-title">⚡ Shooting Tips</div>
@@ -513,7 +551,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
   <video id="arDishVideo" playsinline muted preload="auto" webkit-playsinline loop></video>
   <canvas id="arGLCanvas"></canvas>
   <canvas id="arOverlayCanvas"></canvas>
-  <!-- ML depth debug overlay — shown only with ?debug=1 -->
   <canvas id="depthDebugCanvas"></canvas>
   <div id="dishGlow"></div>
   <div id="arVignette"></div>
@@ -535,7 +572,6 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
     Tilt toward table
     <span class="tilt-bar-wrap"><span class="tilt-bar" id="tiltBar"></span></span>
   </div>
-  <!-- ML status banner -->
   <div id="mlStatusBanner"><span class="ml-dot" id="mlDot"></span><span id="mlStatusText">Loading AI model…</span></div>
   <div id="camPermScreen">
     <div class="perm-icon-wrap">📷</div>
@@ -588,12 +624,10 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 const EMOJIS=['🍽️','🍛','🍲','🥘','🫕','🍱','🍜','🥗','🍣','🍤','🥩','🍗','🍔','🌮','🍕','🧆','🥐','🍰','☕','🍹'];
 const ACCENTS=['#F5A623','#E05A3A','#00C896','#7C5CBF','#3B82F6','#EC4899','#EF4444','#10B981'];
 
-// App state
 let restaurants=[],activeRestId=null,videoBlobs={},currentQRItem=null,currentQRUrl='';
 let editingRestId=null,selectedEmoji='🍽️',selectedAccent='#F5A623';
 let dbReady=false,debugMode=false;
 
-// Camera / AR
 let camStream=null,facingMode='environment';
 let vidDuration=0,isDragging=false,dragStartX=0,dragStartT=0;
 let rafId=null,camReady=false,dishReady=false,currentParams=null;
@@ -603,257 +637,87 @@ let tfStartX=0,tfStartY=0,doStartX=0,doStartY=0;
 let entranceAnimating=false,entranceStart=0,lastFrameTime=0,particles=[];
 let dragFrozen=false,dragTargetTime=0,expandedOpen=false,scaleHideTimer=null;
 
-// Surface detection
 let surfaceLocked=false,surfaceLockTimer=null,autoLockTimer=null,tiltProgress=0;
 
-// WebGL
 let useWebGL=false,dishTexValid=false,camTexValid=false;
 let gl=null,glProgram=null,camTexture=null,dishTexture=null,posBuffer=null,texBuffer=null;
 let uCamTex,uDishTex,uDishRect,uThreshold,uSoftness,uHasCam,uHasDish;
 
-/* ═══════════════════════════════════════════════════════════════════
-   ███╗   ███╗██╗██████╗  █████╗ ███████╗    ███╗   ███╗██╗
-   ████╗ ████║██║██╔══██╗██╔══██╗██╔════╝    ████╗ ████║██║
-   ██╔████╔██║██║██║  ██║███████║███████╗    ██╔████╔██║██║
-   ██║╚██╔╝██║██║██║  ██║██╔══██║╚════██║    ██║╚██╔╝██║██║
-   ██║ ╚═╝ ██║██║██████╔╝██║  ██║███████║    ██║ ╚═╝ ██║███████╗
-   ╚═╝     ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝    ╚═╝     ╚═╝╚══════╝
+/* ═══ MiDaS ML ═══ */
+let depthModel=null,depthCanvas=null,depthCtx=null,depthLoopId=null;
+let flatFrameCount=0,mlReady=false,mlFailed=false;
+let dbgCanvas=null,dbgCtx=null;
 
-   MiDaS Monocular Depth Estimation  —  fully in-browser via TF.js
-   ─────────────────────────────────────────────────────────────────
-   How it works:
-     1. loadDepthModel()  — loads ARPortraitDepth once; ~15 MB, cached
-     2. startMLDepthLoop()  — runs runDepthFrame() every 250 ms (4 fps)
-     3. runDepthFrame()  — draws cam → 320×240 canvas → estimateDepth()
-     4. findFlatRow()  — scans bottom 40% for row with min depth variance
-     5. dishOffsetY lerped toward detected surface Y
-     6. After DEPTH_FRAMES_NEEDED consecutive hits → lockSurface()
-     7. stopMLDepthLoop()  — disposes model, clears GPU memory
-   Parallel with DeviceOrientation tilt + 5 s absolute fallback.
-   Whichever fires first wins.
-═══════════════════════════════════════════════════════════════════ */
+const D_W=320,D_H=240,D_INTERVAL=250,D_TOP_FRAC=0.55,D_MARGIN=30;
+const D_VAR_THRESH=0.004,D_FRAMES=3,D_LERP=0.30;
 
-// MiDaS state
-let depthModel      = null;   // TF.js estimator instance
-let depthCanvas     = null;   // 320×240 offscreen inference canvas
-let depthCtx        = null;
-let depthLoopId     = null;   // setInterval handle
-let flatFrameCount  = 0;      // consecutive confident frame counter
-let mlReady         = false;
-let mlFailed        = false;
-
-// Debug visualisation
-let dbgCanvas = null, dbgCtx = null;
-
-// ── Tunable thresholds ──────────────────────────────────────────
-const D_W          = 320;     // inference canvas width
-const D_H          = 240;     // inference canvas height
-const D_INTERVAL   = 250;     // ms between frames (4 fps)
-const D_TOP_FRAC   = 0.55;    // start scanning at 55% down the frame
-const D_MARGIN     = 30;      // skip leftmost/rightmost N pixels (edge noise)
-const D_VAR_THRESH = 0.004;   // max variance to count as "flat surface"
-const D_FRAMES     = 3;       // consecutive confident frames before lock
-const D_LERP       = 0.30;    // dish Y lerp factor (0=no movement, 1=instant snap)
-
-/**
- * loadDepthModel()
- * Loads MiDaS ARPortraitDepth via TF.js WebGL backend.
- * Shows mlStatusBanner during load; silently degrades if TF.js absent.
- */
-async function loadDepthModel() {
-  if (typeof tf === 'undefined' || typeof depthEstimation === 'undefined') {
-    console.warn('[MiDaS] TF.js not available — tilt fallback only');
-    mlFailed = true;
-    return;
-  }
-  mlBanner('Loading AI depth model…', 'loading');
-  try {
-    await tf.setBackend('webgl');   // force GPU backend on mobile
-    await tf.ready();
-    depthModel = await depthEstimation.createEstimator(
-      depthEstimation.SupportedModels.ARPortraitDepth,
-      { outputDepthRange: [0, 1] }
-    );
-    mlReady = true;
-    mlBanner('AI surface detection ready ✓', 'ready');
-    setTimeout(hideMLBanner, 2800);
-    console.log('[MiDaS] Loaded. Backend:', tf.getBackend());
-  } catch (e) {
-    console.warn('[MiDaS] Load failed:', e.message);
-    mlFailed = true;
-    hideMLBanner();
-  }
+async function loadDepthModel(){
+  if(typeof tf==='undefined'||typeof depthEstimation==='undefined'){mlFailed=true;return;}
+  mlBanner('Loading AI depth model…','loading');
+  try{
+    await tf.setBackend('webgl');await tf.ready();
+    depthModel=await depthEstimation.createEstimator(depthEstimation.SupportedModels.ARPortraitDepth,{outputDepthRange:[0,1]});
+    mlReady=true;mlBanner('AI surface detection ready ✓','ready');setTimeout(hideMLBanner,2800);
+  }catch(e){mlFailed=true;hideMLBanner();}
 }
-
-/**
- * startMLDepthLoop()
- * Creates offscreen canvas and begins 4-fps depth sampling loop.
- * Also sets up the optional debug heatmap canvas.
- */
-function startMLDepthLoop() {
-  if (!mlReady || !depthModel || depthLoopId) return;
-
-  // Offscreen 320×240 canvas for inference (small = fast)
-  depthCanvas = document.createElement('canvas');
-  depthCanvas.width  = D_W;
-  depthCanvas.height = D_H;
-  depthCtx = depthCanvas.getContext('2d');
-
-  // Debug canvas (only with ?debug=1)
-  if (debugMode) {
-    dbgCanvas = $('depthDebugCanvas');
-    dbgCanvas.width  = D_W;
-    dbgCanvas.height = D_H;
-    dbgCanvas.style.display = 'block';
-    dbgCtx = dbgCanvas.getContext('2d');
-  }
-
-  depthLoopId = setInterval(runDepthFrame, D_INTERVAL);
+function startMLDepthLoop(){
+  if(!mlReady||!depthModel||depthLoopId)return;
+  depthCanvas=document.createElement('canvas');depthCanvas.width=D_W;depthCanvas.height=D_H;
+  depthCtx=depthCanvas.getContext('2d');
+  if(debugMode){dbgCanvas=$('depthDebugCanvas');dbgCanvas.width=D_W;dbgCanvas.height=D_H;dbgCanvas.style.display='block';dbgCtx=dbgCanvas.getContext('2d');}
+  depthLoopId=setInterval(runDepthFrame,D_INTERVAL);
 }
-
-/**
- * runDepthFrame()
- * One depth inference pass.  Called every D_INTERVAL ms.
- *
- *  Flow:
- *    drawImage(camVideo) → estimateDepth() → findFlatRow()
- *    → update dishOffsetY via lerp → check confidence → maybe lockSurface()
- */
-async function runDepthFrame() {
-  if (surfaceLocked || !camReady) return;
-  const cv = $('camVideo');
-  if (!cv || cv.readyState < 2) return;
-
-  try {
-    // 1 ── Draw current camera frame at low resolution
-    depthCtx.drawImage(cv, 0, 0, D_W, D_H);
-
-    // 2 ── Run MiDaS depth estimation
-    const result  = await depthModel.estimateDepth(depthCanvas, { minDepth:0, maxDepth:1 });
-    const rawData = await result.depthTensor.data();   // Float32Array, row-major
-    result.depthTensor.dispose();                       // !! must dispose or GPU OOM
-
-    // 3 ── Optional debug heatmap
-    if (debugMode && dbgCtx) drawDepthHeatmap(rawData);
-
-    // 4 ── Find flattest row in bottom portion of frame
-    const { bestRow, bestVar } = findFlatRow(rawData);
-
-    // 5 ── Confident reading?
-    if (bestVar < D_VAR_THRESH) {
-      // Convert row index → normalised 0-1 → screen Y offset
-      const surfYNorm   = bestRow / D_H;                    // 0=top 1=bottom
-      const H           = window.innerHeight;
-      const targetOffY  = (surfYNorm - 0.52) * H * 0.65;   // centred at 52%
-      // Smooth lerp — avoids jitter while tracking the table
-      dishOffsetY = dishOffsetY * (1 - D_LERP) + targetOffY * D_LERP;
-
+async function runDepthFrame(){
+  if(surfaceLocked||!camReady)return;
+  const cv=$('camVideo');if(!cv||cv.readyState<2)return;
+  try{
+    depthCtx.drawImage(cv,0,0,D_W,D_H);
+    const result=await depthModel.estimateDepth(depthCanvas,{minDepth:0,maxDepth:1});
+    const rawData=await result.depthTensor.data();result.depthTensor.dispose();
+    if(debugMode&&dbgCtx)drawDepthHeatmap(rawData);
+    const{bestRow,bestVar}=findFlatRow(rawData);
+    if(bestVar<D_VAR_THRESH){
+      const surfYNorm=bestRow/D_H,H=window.innerHeight;
+      const targetOffY=(surfYNorm-0.52)*H*0.65;
+      dishOffsetY=dishOffsetY*(1-D_LERP)+targetOffY*D_LERP;
       flatFrameCount++;
-      mlBanner(`Surface found — confirming (${flatFrameCount}/${D_FRAMES})`, 'loading');
-
-      if (flatFrameCount >= D_FRAMES) {
-        stopMLDepthLoop();   // dispose model + free GPU
-        lockSurface();       // hand off to shared lock flow
-      }
-    } else {
-      flatFrameCount = 0;   // reset on shaky / non-flat frame
-      $('surfaceScanText').textContent = 'AI scanning — point at flat table…';
-    }
-
-  } catch (e) {
-    // Transient frame errors are harmless — video may not be decoded yet
-    console.warn('[MiDaS] Frame skip:', e.message);
+      mlBanner(`Surface found — confirming (${flatFrameCount}/${D_FRAMES})`,'loading');
+      if(flatFrameCount>=D_FRAMES){stopMLDepthLoop();lockSurface();}
+    }else{flatFrameCount=0;$('surfaceScanText').textContent='AI scanning — point at flat table…';}
+  }catch(e){}
+}
+function findFlatRow(data){
+  const startRow=Math.floor(D_H*D_TOP_FRAC),colS=D_MARGIN,colE=D_W-D_MARGIN,n=colE-colS;
+  let bestRow=startRow,bestVar=Infinity,bestMean=0;
+  for(let row=startRow;row<D_H;row++){
+    const base=row*D_W;let sum=0,sumSq=0;
+    for(let col=colS;col<colE;col++){const v=data[base+col];sum+=v;sumSq+=v*v;}
+    const mean=sum/n,variance=(sumSq/n)-(mean*mean);
+    if(variance<bestVar){bestVar=variance;bestRow=row;bestMean=mean;}
   }
+  return{bestRow,bestVar,bestMean};
 }
-
-/**
- * findFlatRow(data)
- * Scans rows in [D_TOP_FRAC … 1.0] of the depth map.
- * Returns the row with the lowest depth variance (= flattest surface).
- *
- * @param  {Float32Array} data  — depth values in [0,1], row-major
- * @return {{ bestRow:number, bestVar:number, bestMean:number }}
- */
-function findFlatRow(data) {
-  const startRow = Math.floor(D_H * D_TOP_FRAC);
-  const colS     = D_MARGIN;
-  const colE     = D_W - D_MARGIN;
-  const n        = colE - colS;
-
-  let bestRow = startRow, bestVar = Infinity, bestMean = 0;
-
-  for (let row = startRow; row < D_H; row++) {
-    const base = row * D_W;
-    let sum = 0, sumSq = 0;
-    for (let col = colS; col < colE; col++) {
-      const v = data[base + col];
-      sum  += v;
-      sumSq += v * v;
-    }
-    const mean = sum / n;
-    const variance = (sumSq / n) - (mean * mean);
-    if (variance < bestVar) { bestVar = variance; bestRow = row; bestMean = mean; }
-  }
-  return { bestRow, bestVar, bestMean };
+function drawDepthHeatmap(data){
+  const img=dbgCtx.createImageData(D_W,D_H),px=img.data;
+  for(let i=0;i<data.length;i++){const d=data[i],p=i*4;px[p]=Math.round((1-d)*255);px[p+1]=Math.round(d<.5?d*2*255:(1-d)*2*255);px[p+2]=Math.round(d*255);px[p+3]=220;}
+  dbgCtx.putImageData(img,0,0);
+  const{bestRow}=findFlatRow(data);dbgCtx.strokeStyle='#00C896';dbgCtx.lineWidth=2;dbgCtx.beginPath();dbgCtx.moveTo(0,bestRow);dbgCtx.lineTo(D_W,bestRow);dbgCtx.stroke();
 }
-
-/**
- * drawDepthHeatmap(data)
- * Debug only (?debug=1).
- * Near=red, mid=yellow, far=blue. Detected flat row drawn in mint green.
- */
-function drawDepthHeatmap(data) {
-  const img = dbgCtx.createImageData(D_W, D_H);
-  const px  = img.data;
-  for (let i = 0; i < data.length; i++) {
-    const d = data[i], p = i * 4;
-    px[p]   = Math.round((1 - d) * 255);                                  // R near=255
-    px[p+1] = Math.round(d < .5 ? d * 2 * 255 : (1 - d) * 2 * 255);    // G peak at 0.5
-    px[p+2] = Math.round(d * 255);                                        // B far=255
-    px[p+3] = 220;
-  }
-  dbgCtx.putImageData(img, 0, 0);
-
-  // Overlay the detected flat row as a mint line
-  const { bestRow } = findFlatRow(data);
-  dbgCtx.strokeStyle = '#00C896';
-  dbgCtx.lineWidth   = 2;
-  dbgCtx.beginPath();
-  dbgCtx.moveTo(0, bestRow);
-  dbgCtx.lineTo(D_W, bestRow);
-  dbgCtx.stroke();
+function stopMLDepthLoop(){
+  if(depthLoopId){clearInterval(depthLoopId);depthLoopId=null;}
+  try{if(depthModel){depthModel.dispose?.();depthModel=null;}}catch(_){}
+  depthCanvas=depthCtx=null;flatFrameCount=0;
 }
-
-/**
- * stopMLDepthLoop()
- * Clears the interval and disposes TF.js model + tensors.
- * Safe to call multiple times.
- */
-function stopMLDepthLoop() {
-  if (depthLoopId) { clearInterval(depthLoopId); depthLoopId = null; }
-  try { if (depthModel) { depthModel.dispose?.(); depthModel = null; } } catch (_) {}
-  depthCanvas = depthCtx = null;
-  flatFrameCount = 0;
+function mlBanner(text,state){
+  const b=$('mlStatusBanner'),dot=$('mlDot'),span=$('mlStatusText');if(!b)return;
+  span.textContent=text;dot.className='ml-dot'+(state==='ready'?' ready':state==='err'?' err':'');b.style.display='flex';
 }
+function hideMLBanner(){const b=$('mlStatusBanner');if(b)b.style.display='none';}
 
-// ML banner helpers
-function mlBanner(text, state) {
-  const b = $('mlStatusBanner'), dot = $('mlDot'), span = $('mlStatusText');
-  if (!b) return;
-  span.textContent = text;
-  dot.className    = 'ml-dot' + (state === 'ready' ? ' ready' : state === 'err' ? ' err' : '');
-  b.style.display  = 'flex';
-}
-function hideMLBanner() { const b=$('mlStatusBanner'); if(b) b.style.display='none'; }
-
-/* ═══════════════════════════════════════════════════════════════════
-   WEBGL SHADERS
-   MAX-CHANNEL black removal — dark food never erased
-═══════════════════════════════════════════════════════════════════ */
-const VS = `attribute vec2 a_pos;attribute vec2 a_tex;varying vec2 v_uv;
+/* ═══ WEBGL ═══ */
+const VS=`attribute vec2 a_pos;attribute vec2 a_tex;varying vec2 v_uv;
 void main(){v_uv=a_tex;gl_Position=vec4(a_pos,0.,1.);}`;
-
-const FS = `precision mediump float;
+const FS=`precision mediump float;
 varying vec2 v_uv;
 uniform sampler2D u_camTex,u_dishTex;
 uniform vec4 u_dishRect;
@@ -869,7 +733,6 @@ void main(){
   if(v_uv.x<rx||v_uv.x>rx+rw||v_uv.y<ry||v_uv.y>ry+rh){gl_FragColor=bg;return;}
   vec2 uv=vec2((v_uv.x-rx)/rw,(v_uv.y-ry)/rh);
   vec4 dish=texture2D(u_dishTex,uv);
-  /* MAX-CHANNEL: only remove pixels where ALL channels are near zero */
   float maxC=max(dish.r,max(dish.g,dish.b));
   float minC=min(dish.r,min(dish.g,dish.b));
   float sat=(maxC>0.001)?(maxC-minC)/maxC:0.0;
@@ -879,40 +742,28 @@ void main(){
   gl_FragColor=mix(bg,vec4(dish.rgb,1.0),alpha);
 }`;
 
-/* ═══════════════════════════════════════════════════════════════════
-   FIREBASE
-═══════════════════════════════════════════════════════════════════ */
-function waitForFirebase(cb){
-  if(window.__firebaseReady){dbReady=true;cb();}
-  else document.addEventListener('firebaseReady',()=>{dbReady=true;cb();});
-}
+/* ═══ FIREBASE ═══ */
+function waitForFirebase(cb){if(window.__firebaseReady){dbReady=true;cb();}else document.addEventListener('firebaseReady',()=>{dbReady=true;cb();});}
 
-/* ═══════════════════════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════════════════════ */
+/* ═══ HELPERS ═══ */
 function $(i){return document.getElementById(i)}
 function show(i){$(i).style.display='block'}
 function hide(i){$(i).style.display='none'}
 function flexShow(i){$(i).style.display='flex'}
 function applyAccent(hex){
   const r=document.documentElement;
-  r.style.setProperty('--accent',hex);
-  r.style.setProperty('--accent-dim',darken(hex,.3));
-  r.style.setProperty('--accent-glow',hex+'2E');
+  r.style.setProperty('--accent',hex);r.style.setProperty('--accent-dim',darken(hex,.3));r.style.setProperty('--accent-glow',hex+'2E');
 }
 function darken(hex,amt){
   let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return '#'+[Math.round(r*(1-amt)),Math.round(g*(1-amt)),Math.round(b*(1-amt))].map(v=>v.toString(16).padStart(2,'0')).join('');
+  return'#'+[Math.round(r*(1-amt)),Math.round(g*(1-amt)),Math.round(b*(1-amt))].map(v=>v.toString(16).padStart(2,'0')).join('');
 }
 function hexToRgb(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)].join(',');}
 
-/* ═══════════════════════════════════════════════════════════════════
-   ROUTE  —  manager page vs AR viewer
-═══════════════════════════════════════════════════════════════════ */
+/* ═══ ROUTE ═══ */
 window.addEventListener('DOMContentLoaded',()=>{
   const p=new URLSearchParams(location.search);
-  debugMode = p.get('debug')==='1';
-
+  debugMode=p.get('debug')==='1';
   if(p.get('view')==='1'){
     hide('managerPage');show('viewerPage');
     const restId=p.get('rid')||'',itemId=p.get('iid')||'';
@@ -920,49 +771,33 @@ window.addEventListener('DOMContentLoaded',()=>{
       if(restId&&itemId){
         try{
           setDbStatus('wait','Fetching dish…');
-          const [item,rests]=await Promise.all([window.dbGetItem(restId,itemId),window.dbGetRestaurants()]);
+          const[item,rests]=await Promise.all([window.dbGetItem(restId,itemId),window.dbGetRestaurants()]);
           const rest=rests.find(r=>r.id===restId);
-          if(item){
-            setDbStatus('ok','Database connected');
-            initViewer({name:item.name,price:item.price,desc:item.desc||'',ingredients:item.ingredients||'',calories:item.calories||'',tags:item.tags||'',v:item.videoUrl||'',rname:rest?.name||'',accent:rest?.accent||'#F5A623'});
-          } else { initViewerFromParams(p); }
-        }catch(e){console.warn('DB fail',e);initViewerFromParams(p);}
-      } else {initViewerFromParams(p);}
+          if(item){setDbStatus('ok','Database connected');initViewer({name:item.name,price:item.price,desc:item.desc||'',ingredients:item.ingredients||'',tags:item.tags||'',v:item.videoUrl||'',rname:rest?.name||'',accent:rest?.accent||'#F5A623'});}
+          else{initViewerFromParams(p);}
+        }catch(e){initViewerFromParams(p);}
+      }else{initViewerFromParams(p);}
     });
-  } else {
+  }else{
     show('managerPage');
     activeRestId=localStorage.getItem('aa_active_rest')||null;
     waitForFirebase(async()=>{
-      try{
-        setDbStatus('wait','Loading…');
-        restaurants=await window.dbGetRestaurants();
-        setDbStatus('ok','Database connected');
-      }catch(e){setDbStatus('err','DB error — check Firebase config');restaurants=[];}
-      if(activeRestId){const r=restaurants.find(r=>r.id===activeRestId);if(r) applyAccent(r.accent);}
-      renderAll();
-      switchTab(activeRestId?'items':'restaurants');
+      try{setDbStatus('wait','Loading…');restaurants=await window.dbGetRestaurants();setDbStatus('ok','Database connected');}
+      catch(e){setDbStatus('err','DB error — check Firebase config');restaurants=[];}
+      if(activeRestId){const r=restaurants.find(r=>r.id===activeRestId);if(r)applyAccent(r.accent);}
+      renderAll();switchTab(activeRestId?'items':'restaurants');
     });
   }
 });
-function initViewerFromParams(p){
-  initViewer({name:p.get('name')||'',price:p.get('price')||'',desc:p.get('desc')||'',ingredients:p.get('ingredients')||'',calories:p.get('calories')||'',tags:p.get('tags')||'',v:p.get('v')||'',rname:p.get('rname')||'',accent:p.get('accent')||'#F5A623'});
-}
-function setDbStatus(type,text){
-  const el=$('dbStatus'),dot=el.querySelector('.db-dot'),span=$('dbStatusText');
-  el.className='';el.classList.add(type);
-  dot.className='db-dot '+(type==='wait'?'pulse':type);
-  span.textContent=text;
-}
+function initViewerFromParams(p){initViewer({name:p.get('name')||'',price:p.get('price')||'',desc:p.get('desc')||'',ingredients:p.get('ingredients')||'',tags:p.get('tags')||'',v:p.get('v')||'',rname:p.get('rname')||'',accent:p.get('accent')||'#F5A623'});}
+function setDbStatus(type,text){const el=$('dbStatus'),dot=el.querySelector('.db-dot'),span=$('dbStatusText');el.className='';el.classList.add(type);dot.className='db-dot '+(type==='wait'?'pulse':type);span.textContent=text;}
 
 /* ═══ TABS ═══ */
 function switchTab(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  $('panel-'+name).classList.add('active');
-  $('tab-'+name).classList.add('active');
-  if(name==='restaurants') renderRestaurants();
-  else if(name==='items') renderItems();
-  else if(name==='add') renderAddPanel();
+  $('panel-'+name).classList.add('active');$('tab-'+name).classList.add('active');
+  if(name==='restaurants')renderRestaurants();else if(name==='items')renderItems();else if(name==='add')renderAddPanel();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function renderAll(){updateBanner();renderRestaurants();}
@@ -970,24 +805,18 @@ function updateBanner(){
   const r=getActiveRest();
   if(!r){hide('activeBanner');$('noBanner').style.display='block';return;}
   $('noBanner').style.display='none';flexShow('activeBanner');
-  $('bannerEmoji').textContent=r.emoji||'🍽️';
-  $('bannerName').textContent=r.name;
+  $('bannerEmoji').textContent=r.emoji||'🍽️';$('bannerName').textContent=r.name;
   getItemsFromCache(r.id).then(items=>{
     const cnt=items.length;
     $('bannerMeta').textContent=cnt+' dish'+(cnt===1?'':'es')+(r.address?' · '+r.address:'');
     const badge=$('menuBadge');
-    if(cnt>0){badge.style.display='flex';badge.textContent=cnt>99?'99+':cnt;}
-    else badge.style.display='none';
+    if(cnt>0){badge.style.display='flex';badge.textContent=cnt>99?'99+':cnt;}else badge.style.display='none';
   });
-  $('activeBanner').style.borderColor='rgba('+hexToRgb(r.accent)+',.35)';
-  applyAccent(r.accent);
+  $('activeBanner').style.borderColor='rgba('+hexToRgb(r.accent)+',.35)';applyAccent(r.accent);
 }
 function getActiveRest(){return restaurants.find(r=>r.id===activeRestId)||null;}
 const _itemCache={};
-async function getItemsFromCache(rId){
-  if(_itemCache[rId]) return _itemCache[rId];
-  try{const items=await window.dbGetItems(rId);_itemCache[rId]=items;return items;}catch(e){return[];}
-}
+async function getItemsFromCache(rId){if(_itemCache[rId])return _itemCache[rId];try{const items=await window.dbGetItems(rId);_itemCache[rId]=items;return items;}catch(e){return[];}}
 function invalidateCache(rId){delete _itemCache[rId];}
 
 /* ═══ RESTAURANTS ═══ */
@@ -996,15 +825,12 @@ function renderRestaurants(){
   if(!restaurants.length){list.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   list.innerHTML=restaurants.map(r=>{
-    const isActive=r.id===activeRestId;
-    const items=_itemCache[r.id]||[];
+    const isActive=r.id===activeRestId,items=_itemCache[r.id]||[];
     return`<div class="rest-card" style="border-color:${isActive?'rgba('+hexToRgb(r.accent)+',.4)':'rgba(255,255,255,.06)'}">
       <div class="rest-color-strip" style="background:${r.accent}"></div>
       ${isActive?'<div class="active-chip">✓ Active</div>':''}
-      <div class="rest-body">
-        <div class="rest-emoji">${r.emoji||'🍽️'}</div>
-        <div class="rest-info">
-          <div class="rest-name">${r.name}</div>
+      <div class="rest-body"><div class="rest-emoji">${r.emoji||'🍽️'}</div>
+        <div class="rest-info"><div class="rest-name">${r.name}</div>
           ${r.address?`<div class="rest-address">📍 ${r.address}</div>`:''}
           <div class="rest-stats">
             <div class="rest-stat"><div class="rest-stat-num" style="color:${r.accent}">${items.length}</div><div class="rest-stat-label">Dishes</div></div>
@@ -1019,17 +845,16 @@ function renderRestaurants(){
       </div>
     </div>`;
   }).join('');
-  restaurants.forEach(r=>{if(!_itemCache[r.id]) getItemsFromCache(r.id).then(()=>renderRestaurants());});
+  restaurants.forEach(r=>{if(!_itemCache[r.id])getItemsFromCache(r.id).then(()=>renderRestaurants());});
 }
 async function selectRestaurant(id){
   activeRestId=id;localStorage.setItem('aa_active_rest',id);
-  const r=restaurants.find(r=>r.id===id);if(r) applyAccent(r.accent);
+  const r=restaurants.find(r=>r.id===id);if(r)applyAccent(r.accent);
   await getItemsFromCache(id);renderAll();switchTab('items');
 }
 async function deleteRestaurant(id,e){
-  e.stopPropagation();
-  const r=restaurants.find(r=>r.id===id);
-  if(!confirm(`Delete "${r?.name}" and all its dishes?`)) return;
+  e.stopPropagation();const r=restaurants.find(r=>r.id===id);
+  if(!confirm(`Delete "${r?.name}" and all its dishes?`))return;
   try{await window.dbDeleteRestaurant(id);restaurants=restaurants.filter(r=>r.id!==id);invalidateCache(id);if(activeRestId===id){activeRestId=null;localStorage.removeItem('aa_active_rest');}renderAll();}
   catch(e){alert('Error deleting.');}
 }
@@ -1053,8 +878,8 @@ async function saveRestaurant(){
   if(editingRestId){
     const idx=restaurants.findIndex(r=>r.id===editingRestId);
     rest={...restaurants[idx],name,address:$('rm-address').value.trim(),emoji:selectedEmoji,accent:selectedAccent};
-    restaurants[idx]=rest;if(activeRestId===editingRestId) applyAccent(selectedAccent);
-  } else {
+    restaurants[idx]=rest;if(activeRestId===editingRestId)applyAccent(selectedAccent);
+  }else{
     rest={id:'r_'+Date.now(),name,address:$('rm-address').value.trim(),emoji:selectedEmoji,accent:selectedAccent};
     restaurants.push(rest);
   }
@@ -1105,13 +930,13 @@ async function addItem(){
   if(!name||!price){alert('Name and price are required.');return;}
   const tags=['veg','spicy','bestseller','new'].filter(t=>$('tag-'+t).checked).join(',');
   const id='i_'+Date.now();
-  const item={id,name,price,desc:$('inp-desc').value.trim(),ingredients:$('inp-ingredients').value.trim(),calories:$('inp-calories').value.trim(),tags,videoUrl:$('inp-videourl').value.trim(),restaurantId:r.id};
+  const item={id,name,price,desc:$('inp-desc').value.trim(),ingredients:$('inp-ingredients').value.trim(),tags,videoUrl:$('inp-videourl').value.trim(),restaurantId:r.id};
   if(videoBlobs['_p']){videoBlobs[id]=videoBlobs['_p'];delete videoBlobs['_p'];}
   try{await window.dbSaveItem(r.id,item);invalidateCache(r.id);const msg=$('saveMsg');msg.style.display='block';setTimeout(()=>msg.style.display='none',3000);clearForm();updateBanner();}
   catch(e){alert('Error saving dish.');}
 }
 function clearForm(){
-  ['inp-name','inp-price','inp-desc','inp-ingredients','inp-calories','inp-videourl'].forEach(i=>$(i).value='');
+  ['inp-name','inp-price','inp-desc','inp-ingredients','inp-videourl'].forEach(i=>$(i).value='');
   ['veg','spicy','bestseller','new'].forEach(t=>$('tag-'+t).checked=false);
   $('inp-video').value='';$('videoPreview').style.display='none';delete videoBlobs['_p'];
 }
@@ -1126,11 +951,9 @@ async function deleteItem(id,e){
 function buildURL(item){const r=getActiveRest();const base=location.href.split('?')[0];return base+'?'+new URLSearchParams({view:'1',rid:r.id,iid:item.id});}
 async function showQR(id){
   const r=getActiveRest();if(!r)return;
-  const items=await getItemsFromCache(r.id);
-  const item=items.find(i=>i.id===id);if(!item)return;
+  const items=await getItemsFromCache(r.id);const item=items.find(i=>i.id===id);if(!item)return;
   currentQRItem=item;$('qrRestLabel').textContent=(r.emoji||'')+'  '+r.name;
-  $('qrItemName').textContent=item.name;
-  $('qrItemSub').textContent=item.price+(item.desc?' · '+item.desc:'')+' — Scan for 360° AR';
+  $('qrItemName').textContent=item.name;$('qrItemSub').textContent=item.price+(item.desc?' · '+item.desc:'')+' — Scan for 360° AR';
   const url=buildURL(item);currentQRUrl=url;$('qrUrl').textContent=url;
   QRCode.toCanvas($('qrCanvas'),url,{width:220,margin:2,color:{dark:'#000',light:'#fff'}});
   $('qrModal').classList.add('open');
@@ -1141,9 +964,8 @@ function copyQRUrl(){navigator.clipboard.writeText(currentQRUrl).then(()=>alert(
 
 /* ═══ AR VIEWER INIT ═══ */
 function initViewer(p){
-  currentParams=p;
-  if(p.accent) applyAccent(p.accent);
-  $('arRestLabel').textContent=p.rname?'🏪 '+p.rname:'';
+  currentParams=p;if(p.accent)applyAccent(p.accent);
+  $('arRestLabel').textContent=p.rname?'✦ '+p.rname+' ✦':'';
   $('arItemName').textContent=p.name||'Menu item';
   $('arPrice').textContent=p.price||'';
   $('expName').textContent=p.name||'';
@@ -1153,11 +975,10 @@ function initViewer(p){
   else{$('expIngLabel').style.display='none';ig.innerHTML='';}
   const tags=p.tags?p.tags.split(','):[];
   const st=$('stripTags');st.innerHTML='';
-  if(tags.includes('veg')) st.innerHTML+='<span class="strip-tag veg">🟢 Veg</span>';
-  if(tags.includes('spicy')) st.innerHTML+='<span class="strip-tag spicy">🌶 Spicy</span>';
-  if(tags.includes('bestseller')) st.innerHTML+='<span class="strip-tag bestseller">⭐ Best Seller</span>';
-  if(tags.includes('new')) st.innerHTML+='<span class="strip-tag new">✨ New</span>';
-  if(p.calories) st.innerHTML+=`<span class="strip-tag cal">🔥 ${p.calories} kcal</span>`;
+  if(tags.includes('veg'))st.innerHTML+='<span class="strip-tag veg">🟢 Veg</span>';
+  if(tags.includes('spicy'))st.innerHTML+='<span class="strip-tag spicy">🌶 Spicy</span>';
+  if(tags.includes('bestseller'))st.innerHTML+='<span class="strip-tag bestseller">⭐ Best Seller</span>';
+  if(tags.includes('new'))st.innerHTML+='<span class="strip-tag new">✨ New</span>';
   $('stripRest').textContent=p.rname||'';
   $('dishGlow').style.background=`radial-gradient(ellipse,${p.accent||'#F5A623'}28 0%,transparent 70%)`;
   $('camPermScreen').style.display='flex';
@@ -1170,19 +991,12 @@ async function startCamera(){
     camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}},audio:false});
     $('camVideo').srcObject=camStream;await $('camVideo').play();camReady=true;
   }catch(e){camReady=false;}
-
-  startDeviceOrientation();   // tilt fallback
-  startSurfaceScan();          // show scan UI + 5s absolute fallback
-
-  // ══ ML: load MiDaS in background; start depth loop when ready ══
-  loadDepthModel().then(()=>{
-    if(!surfaceLocked && mlReady) startMLDepthLoop();
-  });
+  startDeviceOrientation();startSurfaceScan();
+  loadDepthModel().then(()=>{if(!surfaceLocked&&mlReady)startMLDepthLoop();});
 }
 function skipCamera(){
   hide('camPermScreen');camReady=false;surfaceLocked=true;
-  flexShow('arLoader');$('loaderMsg').textContent='Loading dish…';
-  loadDishVideo();
+  flexShow('arLoader');$('loaderMsg').textContent='Loading dish…';loadDishVideo();
 }
 async function flipCam(){
   if(!camStream)return;camStream.getTracks().forEach(t=>t.stop());
@@ -1190,61 +1004,37 @@ async function flipCam(){
   try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1280},height:{ideal:720}},audio:false});$('camVideo').srcObject=camStream;await $('camVideo').play();}catch(e){}
 }
 
-/* ═══ DEVICE ORIENTATION — tilt fallback ═══ */
+/* ═══ DEVICE ORIENTATION ═══ */
 function startDeviceOrientation(){
   if(!window.DeviceOrientationEvent){autoLockTimer=setTimeout(()=>lockSurface(),2000);return;}
   if(typeof DeviceOrientationEvent.requestPermission==='function'){
     DeviceOrientationEvent.requestPermission()
       .then(s=>{if(s==='granted'){window.addEventListener('deviceorientation',onOrientation,{passive:true});}else{autoLockTimer=setTimeout(()=>lockSurface(),2000);}})
       .catch(()=>{autoLockTimer=setTimeout(()=>lockSurface(),2000);});
-  } else {
-    window.addEventListener('deviceorientation',onOrientation,{passive:true});
-  }
+  }else{window.addEventListener('deviceorientation',onOrientation,{passive:true});}
 }
 function onOrientation(e){
-  if(surfaceLocked) return;
-  const beta=e.beta!=null?Math.abs(e.beta):90;
-  const progress=Math.max(0,1-Math.abs(beta-55)/35);
-  tiltProgress=progress;
-  const bar=$('tiltBar');if(bar) bar.style.width=Math.round(progress*100)+'%';
-  if(progress>0.6){
-    if(!surfaceLockTimer) surfaceLockTimer=setTimeout(()=>{if(tiltProgress>0.5) lockSurface();else surfaceLockTimer=null;},600);
-  } else {
-    if(surfaceLockTimer){clearTimeout(surfaceLockTimer);surfaceLockTimer=null;}
-  }
+  if(surfaceLocked)return;
+  const beta=e.beta!=null?Math.abs(e.beta):90,progress=Math.max(0,1-Math.abs(beta-55)/35);
+  tiltProgress=progress;const bar=$('tiltBar');if(bar)bar.style.width=Math.round(progress*100)+'%';
+  if(progress>0.6){if(!surfaceLockTimer)surfaceLockTimer=setTimeout(()=>{if(tiltProgress>0.5)lockSurface();else surfaceLockTimer=null;},600);}
+  else{if(surfaceLockTimer){clearTimeout(surfaceLockTimer);surfaceLockTimer=null;}}
 }
 function startSurfaceScan(){
-  hide('arLoader');
-  $('surfaceScan').style.display='flex';
-  $('tiltIndicator').style.display='flex';
-  // Absolute fallback — always fires after 5 s so no user is ever stuck
-  autoLockTimer=setTimeout(()=>{if(!surfaceLocked) lockSurface();},5000);
+  hide('arLoader');$('surfaceScan').style.display='flex';$('tiltIndicator').style.display='flex';
+  autoLockTimer=setTimeout(()=>{if(!surfaceLocked)lockSurface();},5000);
 }
 
-/* ═══ LOCK SURFACE — shared endpoint for ML, tilt, and timer ═══ */
+/* ═══ LOCK SURFACE ═══ */
 function lockSurface(){
-  if(surfaceLocked) return;
-  surfaceLocked=true;
-
-  // Stop all detection paths
+  if(surfaceLocked)return;surfaceLocked=true;
   if(surfaceLockTimer){clearTimeout(surfaceLockTimer);surfaceLockTimer=null;}
   if(autoLockTimer){clearTimeout(autoLockTimer);autoLockTimer=null;}
-  stopMLDepthLoop();                                          // ← MiDaS cleanup
-  window.removeEventListener('deviceorientation',onOrientation);
-
-  // Hide scan UI
-  $('surfaceScan').style.display='none';
-  $('tiltIndicator').style.display='none';
-  hideMLBanner();
-
-  // Haptic pulse
-  if(navigator.vibrate) navigator.vibrate([40,30,80]);
-
-  // "Surface Detected" flash
-  $('surfacePlane').style.display='block';
-  $('surfacePlaneLabel').style.display='block';
+  stopMLDepthLoop();window.removeEventListener('deviceorientation',onOrientation);
+  $('surfaceScan').style.display='none';$('tiltIndicator').style.display='none';hideMLBanner();
+  if(navigator.vibrate)navigator.vibrate([40,30,80]);
+  $('surfacePlane').style.display='block';$('surfacePlaneLabel').style.display='block';
   setTimeout(()=>{$('surfacePlane').style.display='none';$('surfacePlaneLabel').style.display='none';},2000);
-
   loadDishVideo();
 }
 
@@ -1272,10 +1062,8 @@ function initWebGL(){
   if(!gl)return false;
   const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;};
   glProgram=gl.createProgram();
-  gl.attachShader(glProgram,mk(gl.VERTEX_SHADER,VS));
-  gl.attachShader(glProgram,mk(gl.FRAGMENT_SHADER,FS));
-  gl.linkProgram(glProgram);
-  if(!gl.getProgramParameter(glProgram,gl.LINK_STATUS))return false;
+  gl.attachShader(glProgram,mk(gl.VERTEX_SHADER,VS));gl.attachShader(glProgram,mk(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(glProgram);if(!gl.getProgramParameter(glProgram,gl.LINK_STATUS))return false;
   gl.useProgram(glProgram);
   posBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,posBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
   texBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,texBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,1,1,1,0,0,1,0]),gl.STATIC_DRAW);
@@ -1286,9 +1074,7 @@ function initWebGL(){
   uDishRect=gl.getUniformLocation(glProgram,'u_dishRect');uThreshold=gl.getUniformLocation(glProgram,'u_threshold');
   uSoftness=gl.getUniformLocation(glProgram,'u_softness');uHasCam=gl.getUniformLocation(glProgram,'u_hasCam');uHasDish=gl.getUniformLocation(glProgram,'u_hasDish');
   camTexture=mkTex();dishTexture=mkTex();
-  gl.uniform1i(uCamTex,0);gl.uniform1i(uDishTex,1);
-  gl.uniform1f(uThreshold,0.07);
-  gl.uniform1f(uSoftness,0.10);
+  gl.uniform1i(uCamTex,0);gl.uniform1i(uDishTex,1);gl.uniform1f(uThreshold,0.07);gl.uniform1f(uSoftness,0.10);
   return true;
 }
 function mkTex(){
@@ -1311,20 +1097,19 @@ function showARControls(){
   c.addEventListener('mousedown',onDragStart,{passive:false});
   window.addEventListener('touchmove',onTouchMove,{passive:false});
   window.addEventListener('mousemove',onDragMove,{passive:false});
-  window.addEventListener('touchend',onTouchEnd);
-  window.addEventListener('mouseup',onDragEnd);
+  window.addEventListener('touchend',onTouchEnd);window.addEventListener('mouseup',onDragEnd);
   setTimeout(()=>{hide('arHint');hide('pinchHint');},5500);
 }
 function resizeAllCanvas(){
   const W=window.innerWidth,H=window.innerHeight;
-  $('arGLCanvas').width=W;$('arGLCanvas').height=H;if(gl) gl.viewport(0,0,W,H);
+  $('arGLCanvas').width=W;$('arGLCanvas').height=H;if(gl)gl.viewport(0,0,W,H);
   $('arOverlayCanvas').width=W;$('arOverlayCanvas').height=H;
 }
 
 /* ═══ ENTRANCE ═══ */
 function triggerEntrance(){
   entranceAnimating=true;entranceStart=performance.now();
-  if(navigator.vibrate) navigator.vibrate([20,40,80]);
+  if(navigator.vibrate)navigator.vibrate([20,40,80]);
   const f=$('entranceFlash');f.style.transition='opacity .15s';f.style.opacity='1';
   setTimeout(()=>{f.style.transition='opacity .7s';f.style.opacity='0';},150);
 }
@@ -1337,12 +1122,12 @@ function getEntranceScale(now){
 }
 
 /* ═══ PARTICLES ═══ */
-function spawnParticles(){particles=[];for(let i=0;i<18;i++) particles.push(newP(true));}
+function spawnParticles(){particles=[];for(let i=0;i<18;i++)particles.push(newP(true));}
 function newP(r){return{x:0,y:0,vx:(Math.random()-.5)*.6,vy:-(Math.random()*1.2+.3),life:r?Math.random():0,maxLife:1+Math.random()*1.2,size:Math.random()*5+2,opacity:Math.random()*.3+.06};}
 
 /* ═══ RENDER LOOP ═══ */
 function startRenderLoop(){
-  if(rafId) cancelAnimationFrame(rafId);
+  if(rafId)cancelAnimationFrame(rafId);
   function frame(now){
     rafId=requestAnimationFrame(frame);
     if(now-lastFrameTime<28)return;lastFrameTime=now;
@@ -1354,9 +1139,12 @@ function startRenderLoop(){
     if(!dragFrozen&&dv.readyState>=2){gl.activeTexture(gl.TEXTURE1);upTex(dishTexture,dv);dishTexValid=true;}
     gl.uniform1i(uHasDish,dishTexValid?1:0);
     const eS=getEntranceScale(now);
-    const tiltOffY=surfaceLocked?H*.04:0;
-    const base=W*.66,dW=base*dishScale*eS,dH=dW;
-    const dX=(W-dW)/2+dishOffsetX, dY=(H-dH)/2+dishOffsetY+tiltOffY;
+    const tiltOffY=surfaceLocked?H*.02:0;
+    /* ── Dish size: 100% of screen width so it fills frame naturally ── */
+    const base=W*1.0,dW=base*dishScale*eS,dH=dW;
+    /* ── Centre perfectly: X and Y both centred ── */
+    const dX=(W-dW)/2+dishOffsetX;
+    const dY=(H-dH)/2+dishOffsetY+tiltOffY;
     gl.uniform4f(uDishRect,dX/W,dY/H,dW/W,dH/H);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
     drawOverlay(W,H,dX,dY,dW,dH);
@@ -1384,8 +1172,7 @@ function drawOverlay(W,H,dx,dy,dw,dh){
     if(p.life>p.maxLife){Object.assign(p,newP(false));p.x=tx+(Math.random()-.5)*dw*.25;p.y=ty;}
     p.x+=p.vx;p.y+=p.vy;
     const pr=p.life/p.maxLife,a=p.opacity*Math.sin(pr*Math.PI)*.5;
-    ctx.beginPath();ctx.arc(p.x,p.y,p.size*(1-pr*.3),0,Math.PI*2);
-    ctx.fillStyle=`rgba(255,252,245,${a})`;ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,p.size*(1-pr*.3),0,Math.PI*2);ctx.fillStyle=`rgba(255,252,245,${a})`;ctx.fill();
   });
 }
 
@@ -1405,7 +1192,7 @@ function onTouchMove(e){
   }
   if(isPinching)return;onDragMove(e);
 }
-function onTouchEnd(e){if(e.touches.length<2) isPinching=false;onDragEnd();}
+function onTouchEnd(e){if(e.touches.length<2)isPinching=false;onDragEnd();}
 function getTD(t){const dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;return Math.sqrt(dx*dx+dy*dy);}
 function onDragStart(e){
   if(!dishReady||!vidDuration||isPinching)return;
@@ -1432,56 +1219,37 @@ function onDragEnd(){
 }
 function toggleExpanded(){
   expandedOpen=!expandedOpen;
-  $('arExpanded').classList.toggle('open',expandedOpen);
-  $('stripChevron').classList.toggle('up',expandedOpen);
+  $('arExpanded').classList.toggle('open',expandedOpen);$('stripChevron').classList.toggle('up',expandedOpen);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   FULL RESET — called by closeViewer() and previewItem()
-   Tears down camera, WebGL, ML model, all timers cleanly.
-═══════════════════════════════════════════════════════════════════ */
+/* ═══ FULL RESET ═══ */
 function _fullReset(){
-  // Camera
   if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
-  // RAF
   if(rafId){cancelAnimationFrame(rafId);rafId=null;}
-  // Timers
   if(surfaceLockTimer){clearTimeout(surfaceLockTimer);surfaceLockTimer=null;}
   if(autoLockTimer){clearTimeout(autoLockTimer);autoLockTimer=null;}
-  // Gyro
   window.removeEventListener('deviceorientation',onOrientation);
-  // Video
   const dv=$('arDishVideo');dv.pause();dv.src='';
-  // ─── MiDaS ML cleanup ───────────────────────────────────────────
-  stopMLDepthLoop();          // clears interval + disposes TF.js model
-  mlReady=false;mlFailed=false;flatFrameCount=0;
-  hideMLBanner();
+  stopMLDepthLoop();mlReady=false;mlFailed=false;flatFrameCount=0;hideMLBanner();
   if(dbgCanvas){dbgCanvas.style.display='none';dbgCanvas=null;}dbgCtx=null;
-  // ────────────────────────────────────────────────────────────────
-  // Flags
   camReady=false;dishReady=false;isDragging=false;vidDuration=0;
-  surfaceLocked=false;tiltProgress=0;
-  dishScale=1;dishOffsetX=0;dishOffsetY=0;particles=[];
+  surfaceLocked=false;tiltProgress=0;dishScale=1;dishOffsetX=0;dishOffsetY=0;particles=[];
   useWebGL=false;dishTexValid=false;camTexValid=false;dragFrozen=false;expandedOpen=false;
   if(gl){gl=null;glProgram=null;camTexture=null;dishTexture=null;}
-  // UI
   document.querySelectorAll('.ar-bracket').forEach(b=>b.classList.remove('show'));
   $('arExpanded').classList.remove('open');$('stripChevron').classList.remove('up');
   $('dishGlow').style.display='none';$('rotRing').style.display='none';$('scaleIndicator').style.display='none';
-  $('scanLine').classList.remove('visible');
-  $('surfacePlane').style.display='none';$('surfacePlaneLabel').style.display='none';
+  $('scanLine').classList.remove('visible');$('surfacePlane').style.display='none';$('surfacePlaneLabel').style.display='none';
   $('surfaceScan').style.display='none';$('tiltIndicator').style.display='none';
-  ['arHUD','arSheet','arHint','pinchHint','arError','arLoader'].forEach(i=>{const el=$(i);if(el) el.style.display='none';});
+  ['arHUD','arSheet','arHint','pinchHint','arError','arLoader'].forEach(i=>{const el=$(i);if(el)el.style.display='none';});
   $('arClose').style.display='none';$('arFlip').style.display='none';
   $('camPermScreen').style.display='flex';
 }
 
 function closeViewer(){
-  _fullReset();
-  hide('viewerPage');show('managerPage');
+  _fullReset();hide('viewerPage');show('managerPage');
   history.replaceState({},'',location.pathname);
-  const r=getActiveRest();if(r) applyAccent(r.accent);
-  renderItems();
+  const r=getActiveRest();if(r)applyAccent(r.accent);renderItems();
 }
 function previewItem(id){
   getItemsFromCache(activeRestId||'').then(items=>{
@@ -1489,10 +1257,9 @@ function previewItem(id){
     const item=items.find(i=>i.id===id);if(!item)return;
     const vurl=item.videoUrl||(videoBlobs[id]?.url||'');
     _fullReset();hide('managerPage');show('viewerPage');
-    initViewer({name:item.name,price:item.price,desc:item.desc||'',ingredients:item.ingredients||'',calories:item.calories||'',tags:item.tags||'',v:vurl,rname:r.name,accent:r.accent});
+    initViewer({name:item.name,price:item.price,desc:item.desc||'',ingredients:item.ingredients||'',tags:item.tags||'',v:vurl,rname:r.name,accent:r.accent});
   });
 }
-
 function showError(msg){
   const el=$('arError');
   el.innerHTML='⚠️ '+msg+'<br><br><button onclick="this.parentElement.style.display=\'none\'" style="background:white;color:#a00;border:none;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;">Dismiss</button>';
