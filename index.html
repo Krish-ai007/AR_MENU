@@ -250,7 +250,517 @@ input[type="file"]{padding:12px 14px;font-size:13px;width:100%;color:var(--cream
 }
 
 /* ════ AR VIEWER ════ */
-#viewerPage{display:none;position:fixed;inset:0;z-index:100;background:#000;overflow:hidden;font-family:var(--sans)}
+#viewerPage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #ffffff;
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#camVideo, #arGLCanvas, #arOverlayCanvas, #depthDebugCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#camVideo { z-index: 1; }
+#arGLCanvas { z-index: 2; pointer-events: none; }
+#arOverlayCanvas { z-index: 3; pointer-events: none; }
+#depthDebugCanvas { z-index: 4; display: none; pointer-events: none; opacity: 0.5; }
+#arDishVideo { display: none; } /* Hidden preloaded asset */
+
+/* --- Spatial & Atmospheric Effects --- */
+#arVignette {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+  pointer-events: none;
+}
+
+#dishGlow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(0, 255, 200, 0.15) 0%, transparent 70%);
+  z-index: 4;
+  pointer-events: none;
+}
+
+#scanLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to bottom, rgba(0, 255, 200, 0), rgba(0, 255, 200, 0.4), rgba(0, 255, 200, 0));
+  z-index: 6;
+  pointer-events: none;
+  animation: scanMove 4s linear infinite;
+  display: none; /* Toggle active via JS during tracking state */
+}
+
+/* --- Tracking Target Brackets --- */
+.ar-bracket {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  z-index: 6;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+.ar-bracket.tl { top: 140px; left: 40px; border-right: 0; border-bottom: 0; }
+.ar-bracket.tr { top: 140px; right: 40px; border-left: 0; border-bottom: 0; }
+.ar-bracket.bl { bottom: 220px; left: 40px; border-right: 0; border-top: 0; }
+.ar-bracket.br { bottom: 220px; right: 40px; border-left: 0; border-top: 0; }
+
+/* --- Surface Scanning & Detection UI --- */
+#surfacePlaneLabel {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 255, 128, 0.2);
+  border: 1px solid #00ff80;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #00ff80;
+  backdrop-filter: blur(4px);
+  z-index: 7;
+  box-shadow: 0 0 15px rgba(0, 255, 128, 0.3);
+  display: none; /* Present only when surface detected */
+}
+
+#surfaceScan {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 7;
+}
+.scan-oval {
+  width: 160px;
+  height: 60px;
+  border: 2px dashed rgba(0, 255, 200, 0.5);
+  border-radius: 50%;
+  animation: pulseOval 2s infinite ease-in-out;
+}
+#surfaceScanText {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  letter-spacing: 0.5px;
+}
+
+/* --- Device Tilt Feedback --- */
+#tiltIndicator {
+  position: absolute;
+  top: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 15, 15, 0.75);
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 7;
+}
+.tilt-bar-wrap {
+  width: 50px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.tilt-bar {
+  display: block;
+  width: 60%; /* Bind dynamic value here */
+  height: 100%;
+  background: #00ffc8;
+}
+
+/* --- Status Banners & Loaders --- */
+#mlStatusBanner {
+  position: absolute;
+  top: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 20, 20, 0.85);
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  z-index: 8;
+}
+.ml-dot {
+  width: 6px;
+  height: 6px;
+  background: #00ffc8;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #00ffc8;
+  animation: blink 1s infinite alternate;
+}
+
+#arLoader {
+  position: absolute;
+  inset: 0;
+  background: #0f0f0f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 90;
+}
+#arLoader .ring {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  border-top-color: #00ffc8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+#loaderMsg { font-size: 14px; color: #a0a0a0; font-weight: 500; }
+
+/* --- HUD (Top Overlay Display) --- */
+#arHUD {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 32px 24px 48px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+  z-index: 10;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+.ar-top-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+#arRestLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 4px 10px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+.ar-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 69, 58, 0.15);
+  border: 1px solid rgba(255, 69, 58, 0.4);
+  color: #ff453a;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+}
+.live-dot {
+  width: 5px;
+  height: 5px;
+  background: #ff453a;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #ff453a;
+}
+#arItemName {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-top: 4px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+/* --- Floating UX Interaction Hints --- */
+#arHint, #pinchHint, #rotRing, #scaleIndicator {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 7;
+}
+#arHint, #pinchHint {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.05);
+  animation: fadeOutHint 5s forwards;
+}
+#arHint { bottom: 200px; }
+#pinchHint { bottom: 240px; }
+
+#scaleIndicator {
+  bottom: 155px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(20,20,20,0.8);
+  padding: 3px 8px;
+  border-radius: 8px;
+  color: #00ffc8;
+}
+#rotRing {
+  bottom: 145px;
+  display: none; /* Make active on rotation gesture */
+}
+#rotDegree {
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* --- The Bottom Sheet UI Drawer --- */
+#arSheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(to top, rgba(18, 18, 18, 0.96) calc(100% - 30px), rgba(18, 18, 18, 0.85) 100%);
+  backdrop-filter: blur(24px);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 12px 24px calc(24px + env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+  z-index: 20;
+  box-sizing: border-box;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+#arPillHandle {
+  width: 36px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  margin: 0 auto 16px;
+  cursor: pointer;
+}
+
+#arPriceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+#arPrice {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+#arPriceLabel {
+  font-size: 13px;
+  color: #8a8a8f;
+}
+
+#arStrip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding-bottom: 4px;
+}
+.strip-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.strip-tags {
+  font-size: 12px;
+  color: #00ffc8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.strip-rest {
+  font-size: 14px;
+  color: #a0a0a0;
+}
+#stripChevron {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  transition: transform 0.3s ease;
+}
+
+/* Expandable Drawer Engine Container */
+#arExpanded {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+#arExpandedInner {
+  overflow: hidden;
+}
+.exp-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 16px 0;
+}
+#expName {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+#expDesc {
+  font-size: 14px;
+  color: #b0b0b0;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.exp-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #707070;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+#expIngredients {
+  font-size: 13px;
+  color: #909090;
+  line-height: 1.4;
+}
+
+/* Drawer Open Modifiers */
+#arSheet.expanded #arExpanded {
+  grid-template-rows: 1fr;
+}
+#arSheet.expanded #stripChevron {
+  transform: rotate(180deg);
+}
+
+/* --- Control Buttons --- */
+#arClose, #arFlip {
+  position: absolute;
+  top: 28px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  z-index: 30;
+  transition: background 0.2s, transform 0.2s;
+}
+#arClose { right: 20px; }
+#arFlip { left: 20px; } /* Clean separation, handles camera swap standard UX layout */
+#arClose:active, #arFlip:active { transform: scale(0.92); background: rgba(20,20,20,0.9); }
+
+/* --- Full Screen Camera Permission Splash --- */
+#camPermScreen {
+  position: absolute;
+  inset: 0;
+  background: #0d0d0d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+  z-index: 100;
+}
+.perm-icon-wrap {
+  font-size: 56px;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 0 16px rgba(0, 255, 200, 0.25));
+}
+#camPermScreen h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.4px;
+}
+#camPermScreen p {
+  font-size: 15px;
+  color: #909090;
+  line-height: 1.5;
+  max-width: 280px;
+  margin-bottom: 40px;
+}
+#camPermBtn, #camSkipBtn {
+  width: 100%;
+  max-width: 280px;
+  padding: 15px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+#camPermBtn {
+  background: #00ffc8;
+  color: #050505;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 24px rgba(0, 255, 200, 0.25);
+}
+#camPermBtn:active { transform: scale(0.97); }
+#camSkipBtn {
+  background: transparent;
+  color: #707070;
+  border: 1px solid #222;
+}
+#camSkipBtn:active { background: rgba(255,255,255,0.02); }
+
+/* --- Design Animations --- */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes blink { from { opacity: 0.3; } to { opacity: 1; } }
+@keyframes scanMove {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+@keyframes pulseOval {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.08); opacity: 0.8; }
+}
+@keyframes fadeOutHint {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
 #arGLCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #arOverlayCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #arDishVideo,#camVideo{display:none;position:absolute;left:-9999px}
